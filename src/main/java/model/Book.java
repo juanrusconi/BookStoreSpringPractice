@@ -2,10 +2,7 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.data.annotation.Id;
-import org.springframework.hateoas.Link;
-
 
 public class Book {
 	
@@ -19,16 +16,8 @@ public class Book {
 
 	public Book(){		
 	}
-
-//	public Book(String title, String author, String publisher, List<Link> links) {
-//		super();
-//		this.title = title;
-//		this.author = author;
-//		this.publisher = publisher;
-//		this.links = links;
-//	}
 	
-	public Book(String id, String title, String author, String publisher, List<Link> links) {
+	public Book(String id, String title, String author, String publisher, ArrayList<Link> links) {
 		super();
 		this.id = id;
 		this.title = title;

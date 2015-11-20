@@ -2,7 +2,6 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.hateoas.Link;
 
@@ -10,7 +9,7 @@ import org.springframework.hateoas.Link;
 public class Book {
 	
 	//@Id
-	private long id;
+	private Long id;
 	private String title;
 	private String author;
 	private String publisher;

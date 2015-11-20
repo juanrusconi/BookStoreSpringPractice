@@ -2,14 +2,16 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.data.mongodb.core.mapping.Document;
+
+import org.springframework.data.annotation.Id;
 import org.springframework.hateoas.Link;
 
-@Document(collection="books")
+
 public class Book {
 	
-	//@Id
-	private Long id;
+	@Id
+	private String id;
+	
 	private String title;
 	private String author;
 	private String publisher;
@@ -26,7 +28,7 @@ public class Book {
 //		this.links = links;
 //	}
 	
-	public Book(long id, String title, String author, String publisher, List<Link> links) {
+	public Book(String id, String title, String author, String publisher, List<Link> links) {
 		super();
 		this.id = id;
 		this.title = title;
@@ -35,11 +37,11 @@ public class Book {
 		this.links = links;
 	}
 
-	public long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

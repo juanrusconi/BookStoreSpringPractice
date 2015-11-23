@@ -35,7 +35,6 @@ public class BookController {
 	
 	@RequestMapping(method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<List<Book>> getAllBooks(){
-		bookRepo.deleteAll();
 		return new ResponseEntity<List<Book>>(bookRepo.findAll(), HttpStatus.OK);
 	}
 	
@@ -49,12 +48,14 @@ public class BookController {
 	
 
 	@RequestMapping(method=RequestMethod.POST)
-	ResponseEntity<Void> createBook(@RequestParam(value="title", defaultValue="no_title") String bookTitle, 
-									@RequestParam(value="author", defaultValue="no_author") String bookAuthor, 
-									@RequestParam(value="pub", defaultValue="no_publisher") String bookPub) throws BookAlreadyExistsException, URISyntaxException{
-		
+	ResponseEntity<Void> createBook(@RequestParam(value="title", defaultValue="no_title") String title, 
+									@RequestParam(value="author", defaultValue="no_author") String author, 
+									@RequestParam(value="pub", defaultValue="no_publisher") String pub) throws BookAlreadyExistsException, URISyntaxException{
 		Long newId = counter.incrementAndGet();
-		Book newBook = new Book(newId.toString(), bookTitle, bookAuthor, bookPub, new ArrayList<Link>());
+		while (bookRepo.exists(newId.toString())){
+			newId = counter.incrementAndGet();
+		}
+		Book newBook = new Book(newId.toString(), title, author, pub, new ArrayList<Link>());
 		
 //		newBook.addLink(new Link(ControllerLinkBuilder.linkTo(BookController.class).slash(newBook.getId()).toString(), Link.REL_SELF));
 //		newBook.addLink(new Link(ControllerLinkBuilder.linkTo(BookController.class).toString(), "collection"));

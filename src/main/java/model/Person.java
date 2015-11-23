@@ -9,8 +9,7 @@ public class Person {
 	@Id
 	private String id;
 	
-	private String fname;	/*first name*/	
-	private String lname;	/*last name*/
+	private String name;
 	private List<Book> books = new ArrayList<Book>();	/* list of books borrowed by this person */
 	private List<MyLink> links = new ArrayList<MyLink>();
 	
@@ -18,18 +17,16 @@ public class Person {
 		
 	}
 
-	public Person(String fname, String lname, ArrayList<Book> books, ArrayList<MyLink> links) {
+	public Person(String name, ArrayList<Book> books, ArrayList<MyLink> links) {
 		super();
-		this.fname = fname;
-		this.lname = lname;
+		this.name = name;
 		this.books = books;
 		this.links = links;
 	}
 
 	@Override
 	public String toString() {
-		return "Person [id=" + id + ", fname=" + fname + ", lname=" + lname + ", books=" + books + ", links=" + links
-				+ "]";
+		return "Person [id=" + id + ", name=" + name + ", books=" + books + ", links=" + links + "]";
 	}
 
 	public String getId() {
@@ -40,20 +37,12 @@ public class Person {
 		this.id = id;
 	}
 
-	public String getFname() {
-		return fname;
+	public String getName() {
+		return name;
 	}
 
-	public void setFname(String fname) {
-		this.fname = fname;
-	}
-
-	public String getLname() {
-		return lname;
-	}
-
-	public void setLname(String lname) {
-		this.lname = lname;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public List<Book> getBooks() {
@@ -72,6 +61,14 @@ public class Person {
 		this.links = links;
 	}
 	
+	public void addLink(MyLink newLink){
+		links.add(newLink);
+	}
 	
+	public void addBook(Book newBook){
+		books.add(newBook);
+	}
+	
+	//TODO: methods for managing collection of borrowed books 
 	
 }

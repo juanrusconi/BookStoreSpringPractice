@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 /* ---- Spring HATEOAS ---- */
 //import org.springframework.hateoas.Link;
 //import org.springframework.hateoas.mvc.ControllerLinkBuilder;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import exception.BookAlreadyExistsException;
 import exception.BookDoesNotExistException;
+import exception.CollectionIsEmptyException;
 import model.Book;
 import model.MyLink;
 
@@ -35,20 +37,27 @@ public class BookController {
 	
 	@Autowired
 	private BookRepository bookRepo;
+	
 	public static String books_uri = "http://localhost:8080/books/";
 	private final AtomicLong counter = new AtomicLong();
+	private MongoTemplate mongoTemp;
 	
 	
 	@RequestMapping(method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<List<Book>> getAllBooks(){
-		return new ResponseEntity<List<Book>>(bookRepo.findAll(), HttpStatus.OK);
+	ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{
+		List<Book> collection = bookRepo.findAll();
+		if (!collection.isEmpty())
+			return new ResponseEntity<List<Book>>(collection, HttpStatus.OK);			
+		throw new CollectionIsEmptyException(mongoTemp.getCollectionName(Book.class));
 	}
 	
 	
 	
 	@RequestMapping(method=RequestMethod.GET, value = "/{bookId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<Book> getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
-		return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.OK);
+		if (bookRepo.exists(bookId)) 
+			return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.OK);
+		throw new BookDoesNotExistException(bookId);
 	}
 	
 	
@@ -56,7 +65,8 @@ public class BookController {
 	@RequestMapping(method=RequestMethod.POST)
 	ResponseEntity<Void> createBook(@RequestParam(value="title", defaultValue="no_title") String title, 
 									@RequestParam(value="author", defaultValue="no_author") String author, 
-									@RequestParam(value="pub", defaultValue="no_publisher") String pub) throws BookAlreadyExistsException, URISyntaxException{
+									@RequestParam(value="pub", defaultValue="no_publisher") String pub) 
+														throws BookAlreadyExistsException, URISyntaxException{
 		Long newId = counter.incrementAndGet();
 		while (bookRepo.exists(newId.toString())){
 			newId = counter.incrementAndGet();
@@ -73,7 +83,9 @@ public class BookController {
 		headers.setLocation(new URI(books_uri+newBook.getId()));
 		HttpStatus operationStatus = (bookRepo.save(newBook)!=null)? HttpStatus.OK:HttpStatus.BAD_REQUEST;
 		
-		return new ResponseEntity<Void>(headers, operationStatus);
+		if (!bookRepo.exists(newBook.getId())) 
+			return new ResponseEntity<Void>(headers, operationStatus);
+		throw new BookAlreadyExistsException(newBook.getId());
 	}
 	
 	

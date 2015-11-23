@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 /* ---- Spring annotations ---- */
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,13 +28,13 @@ import model.MyLink;
 import model.Person;;
 
 @RestController
-@RequestMapping("/persons")
+@RequestMapping("/person")
 public class PersonController {
 	
 	@Autowired
 	private PersonRepository personRepo;
 	
-	public static String person_uri = "http://localhost:8080/persons/";
+	public static String person_uri = "http://localhost:8080/person/";
 	private MongoTemplate mongoTemp;
 	
 	
@@ -48,9 +49,9 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<Person> getPerson(@RequestParam(value="name", defaultValue="no_name") String name) throws PersonDoesNotExistsException{
-		if (personRepo.existsByName(name)) 
+	@RequestMapping(value="/{personName}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	ResponseEntity<Person> getPerson(@PathVariable("personName") String name) throws PersonDoesNotExistsException{
+		if (personRepo.exists(name)) 
 			return new ResponseEntity<Person>(personRepo.findByName(name), HttpStatus.OK);
 		throw new PersonDoesNotExistsException(name);
 	}
@@ -69,7 +70,7 @@ public class PersonController {
 		headers.setLocation(new URI(person_uri+newPerson.getName()));
 		
 		HttpStatus operationStatus = (personRepo.save(newPerson)!=null)? HttpStatus.OK:HttpStatus.BAD_REQUEST;
-		if (!personRepo.existsByName(newPerson.getName()))
+		if (!personRepo.exists(newPerson.getName()))
 			return new ResponseEntity<Void>(headers, operationStatus);
 		throw new PersonAlreadyExistsException(newPerson.getName());
 	}

@@ -7,14 +7,13 @@ import org.springframework.data.annotation.Id;
 public class Person {
 
 	@Id
-	private String id;
+	String id;
 	
-	private String name;
-	private List<Book> books = new ArrayList<Book>();	/* list of books borrowed by this person */
-	private List<MyLink> links = new ArrayList<MyLink>();
+	String name;
+	List<Book> books = new ArrayList<Book>();	/* list of books borrowed by this person */
+	List<MyLink> links = new ArrayList<MyLink>();
 	
-	protected Person(){
-		
+	protected Person(){	
 	}
 
 	public Person(String name, ArrayList<Book> books, ArrayList<MyLink> links) {

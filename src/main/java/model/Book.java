@@ -12,12 +12,12 @@ public class Book {
 	private String title;
 	private String author;
 	private String publisher;
-	private List<Link> links = new ArrayList<Link>();;
+	private List<MyLink> links = new ArrayList<MyLink>();;
 
 	public Book(){		
 	}
 	
-	public Book(String id, String title, String author, String publisher, ArrayList<Link> links) {
+	public Book(String id, String title, String author, String publisher, ArrayList<MyLink> links) {
 		super();
 		this.id = id;
 		this.title = title;
@@ -58,15 +58,15 @@ public class Book {
 		this.publisher = publisher;
 	}
 
-	public List<Link> getLinks() {
+	public List<MyLink> getLinks() {
 		return links;
 	}
 
-	public void setLinks(List<Link> links) {
+	public void setLinks(List<MyLink> links) {
 		this.links = links;
 	}
 	
-	public void addLink(Link newLink){
+	public void addLink(MyLink newLink){
 		links.add(newLink);
 	}
 

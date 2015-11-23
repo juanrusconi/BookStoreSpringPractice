@@ -5,23 +5,29 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.springframework.beans.factory.annotation.Autowired;
+/* ---- Spring HATEOAS ---- */
 //import org.springframework.hateoas.Link;
 //import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+/* ---- Spring HTTP ---- */
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+/* ---- Spring annotations ---- */
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import exception.BookAlreadyExistsException;
 import exception.BookDoesNotExistException;
 import model.Book;
-import model.Link;
+import model.MyLink;
+
 
 @RestController
 @RequestMapping("/books")
@@ -55,11 +61,11 @@ public class BookController {
 		while (bookRepo.exists(newId.toString())){
 			newId = counter.incrementAndGet();
 		}
-		Book newBook = new Book(newId.toString(), title, author, pub, new ArrayList<Link>());
+		Book newBook = new Book(newId.toString(), title, author, pub, new ArrayList<MyLink>());
 		
 //		newBook.addLink(new Link(ControllerLinkBuilder.linkTo(BookController.class).slash(newBook.getId()).toString(), Link.REL_SELF));
-//		newBook.addLink(new Link(ControllerLinkBuilder.linkTo(BookController.class).toString(), "collection"));
-		newBook.addLink(new Link("self", books_uri+newBook.getId()));
+//		newBook.addLink(new Link(ControllerLinkBuilder.linkTo(BookController.class).toString(), "coll"));
+		newBook.addLink(new MyLink("self", books_uri+newBook.getId()));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);

@@ -1,14 +1,14 @@
 package model;
 
-public class Link {
-
+public class MyLink {
+	
 	private String rel;
 	private String href;
 	
-	public Link(){
+	public MyLink(){
 	}
 	
-	public Link(String rel, String href) {
+	public MyLink(String rel, String href) {
 		super();
 		this.rel = rel;
 		this.href = href;

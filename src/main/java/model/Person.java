@@ -9,8 +9,8 @@ public class Person {
 	@Id
 	private String id;
 	
-	private String fname;
-	private String lname;
+	private String fname;	/*first name*/	
+	private String lname;	/*last name*/
 	private List<Book> books = new ArrayList<Book>();	/* list of books borrowed by this person */
 	private List<MyLink> links = new ArrayList<MyLink>();
 	
@@ -18,9 +18,8 @@ public class Person {
 		
 	}
 
-	public Person(String id, String fname, String lname, List<Book> books, List<MyLink> links) {
+	public Person(String fname, String lname, ArrayList<Book> books, ArrayList<MyLink> links) {
 		super();
-		this.id = id;
 		this.fname = fname;
 		this.lname = lname;
 		this.books = books;

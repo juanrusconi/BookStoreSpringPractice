@@ -23,10 +23,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+/* --- Exception classes --- */
 import exception.BookAlreadyExistsException;
 import exception.BookDoesNotExistException;
 import exception.CollectionIsEmptyException;
+
 import model.Book;
 import model.MyLink;
 

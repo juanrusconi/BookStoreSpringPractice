@@ -34,7 +34,7 @@ import model.MyLink;
 
 
 @RestController
-@RequestMapping(value="bookstore/books", produces=MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value="/", produces=MediaType.APPLICATION_JSON_VALUE, consumes=MediaType.APPLICATION_JSON_VALUE)
 public class BookController {
 	
 	@Autowired
@@ -57,7 +57,7 @@ public class BookController {
 	@RequestMapping(method=RequestMethod.GET, value = "/{bookId}")
 	ResponseEntity<Book> getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
 		if (bookRepo.exists(bookId)) 
-			return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.OK);
+			return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.FOUND);
 		throw new BookDoesNotExistException(bookId);
 	}
 	
@@ -84,6 +84,21 @@ public class BookController {
 			return new ResponseEntity<Void>(headers, operationStatus);
 		}
 		throw new BookAlreadyExistsException(newBook.getId());
+	}
+	
+	
+	
+	@RequestMapping(method=RequestMethod.DELETE, value = "/{bookId}")
+	ResponseEntity<Void> deleteBook(@PathVariable String bookId ) throws BookDoesNotExistException, URISyntaxException{
+		
+		if (bookRepo.exists(bookId)){
+			bookRepo.delete(bookId);			
+			HttpHeaders headers = new HttpHeaders();
+			headers.setLocation((getUriForBooks(""))); //returns the URI of the collection it was in
+			
+			return new ResponseEntity<Void>(headers, HttpStatus.OK);
+		}
+		throw new BookDoesNotExistException(bookId);
 	}
 	
 	

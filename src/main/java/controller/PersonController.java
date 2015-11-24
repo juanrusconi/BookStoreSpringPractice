@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import exception.BookDoesNotExistException;
 /* --- Exception classes --- */
 import exception.CollectionIsEmptyException;
 import exception.PersonAlreadyExistsException;
@@ -29,7 +31,7 @@ import model.MyLink;
 import model.Person;;
 
 @RestController
-@RequestMapping(value="bookstore/persons", produces=MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value="bookstore/persons", produces=MediaType.APPLICATION_JSON_VALUE, consumes=MediaType.APPLICATION_JSON_VALUE)
 public class PersonController {
 	
 	@Autowired
@@ -52,7 +54,7 @@ public class PersonController {
 	@RequestMapping(value="/{personName}", method=RequestMethod.GET)
 	ResponseEntity<Person> getPerson(@PathVariable("personName") String name) throws PersonDoesNotExistsException{
 		if (personRepo.findByName(name)!=null) 
-			return new ResponseEntity<Person>(personRepo.findByName(name), HttpStatus.OK);
+			return new ResponseEntity<Person>(personRepo.findByName(name), HttpStatus.FOUND);
 		throw new PersonDoesNotExistsException(name);
 	}
 	
@@ -78,6 +80,21 @@ public class PersonController {
 	
 	
 	
+	@RequestMapping(method=RequestMethod.DELETE, value = "/{personName}")
+	ResponseEntity<Void> deletePerson(@PathVariable String personName ) throws PersonDoesNotExistsException, URISyntaxException{
+		
+		if (personRepo.findByName(personName)!=null){
+			personRepo.deleteByName(personName);			
+			HttpHeaders headers = new HttpHeaders();
+			headers.setLocation((getUriForPersons(""))); //returns the URI of the collection it was in
+			
+			return new ResponseEntity<Void>(headers, HttpStatus.OK);
+		}
+		throw new PersonDoesNotExistsException(personName);
+	}
+	
+	
+	
 	private URI getUriForPersons(String personName) throws URISyntaxException{
 		/*
 		 * returns the URI for the 'Persons' collection if the parameter is empty, or the resource URI if a personName is specified
@@ -87,8 +104,11 @@ public class PersonController {
 
 
 	
-	@RequestMapping(value="books")
+	@RequestMapping(value="/{personName}/books")	//TODO: new controller 'reservation' that handles books in person's class ?
 	BookController getBookController(){
+		/*
+		 * returns book subresource 
+		 */
 		return new BookController();
 	}
 }

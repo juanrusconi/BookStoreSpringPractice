@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import exception.BookDoesNotExistException;
 /* --- Exception classes --- */
 import exception.CollectionIsEmptyException;
 import exception.PersonAlreadyExistsException;
@@ -31,7 +29,7 @@ import model.MyLink;
 import model.Person;;
 
 @RestController
-@RequestMapping(value="bookstore/persons", produces=MediaType.APPLICATION_JSON_VALUE, consumes=MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping("bookstore/persons")
 public class PersonController {
 	
 	@Autowired
@@ -41,7 +39,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.GET)
+	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Person>> getAllPersons() throws CollectionIsEmptyException{
 		List<Person> collection = personRepo.findAll();
 		if (!collection.isEmpty())
@@ -51,16 +49,16 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(value="/{personName}", method=RequestMethod.GET)
+	@RequestMapping(value="/{personName}", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<Person> getPerson(@PathVariable("personName") String name) throws PersonDoesNotExistsException{
 		if (personRepo.findByName(name)!=null) 
-			return new ResponseEntity<Person>(personRepo.findByName(name), HttpStatus.FOUND);
+			return new ResponseEntity<Person>(personRepo.findByName(name), HttpStatus.OK);
 		throw new PersonDoesNotExistsException(name);
 	}
 	
 	
 	
-	@RequestMapping(method=RequestMethod.POST)
+	@RequestMapping(method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<Void> createPerson (@RequestParam(value="name", defaultValue="no_name") String name) 
 												throws URISyntaxException, PersonAlreadyExistsException{
 		
@@ -80,7 +78,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.DELETE, value = "/{personName}")
+	@RequestMapping(method=RequestMethod.DELETE, value = "/{personName}", produces=MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<Void> deletePerson(@PathVariable String personName ) throws PersonDoesNotExistsException, URISyntaxException{
 		
 		if (personRepo.findByName(personName)!=null){

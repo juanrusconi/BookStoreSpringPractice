@@ -34,7 +34,7 @@ import model.MyLink;
 
 
 @RestController
-@RequestMapping(value="/", produces=MediaType.APPLICATION_JSON_VALUE, consumes=MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping("bookstore/books")
 public class BookController {
 	
 	@Autowired
@@ -44,7 +44,7 @@ public class BookController {
 	private MongoTemplate mongoTemp;
 	
 	
-	@RequestMapping(method=RequestMethod.GET)
+	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{
 		List<Book> collection = bookRepo.findAll();
 		if (!collection.isEmpty())
@@ -54,16 +54,16 @@ public class BookController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.GET, value = "/{bookId}")
+	@RequestMapping(method=RequestMethod.GET, value = "/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<Book> getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
 		if (bookRepo.exists(bookId)) 
-			return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.FOUND);
+			return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.OK);
 		throw new BookDoesNotExistException(bookId);
 	}
 	
 	
 
-	@RequestMapping(method=RequestMethod.POST)
+	@RequestMapping(method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<Void> createBook(@RequestParam(value="title", defaultValue="no_title") String title, 
 									@RequestParam(value="author", defaultValue="no_author") String author, 
 									@RequestParam(value="pub", defaultValue="no_publisher") String pub) 
@@ -88,7 +88,7 @@ public class BookController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.DELETE, value = "/{bookId}")
+	@RequestMapping(method=RequestMethod.DELETE, value = "/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<Void> deleteBook(@PathVariable String bookId ) throws BookDoesNotExistException, URISyntaxException{
 		
 		if (bookRepo.exists(bookId)){

@@ -34,7 +34,7 @@ import model.MyLink;
 
 
 @RestController
-@RequestMapping("/books")
+@RequestMapping(value="bookstore/books", produces=MediaType.APPLICATION_JSON_VALUE)
 public class BookController {
 	
 	@Autowired
@@ -44,7 +44,7 @@ public class BookController {
 	private MongoTemplate mongoTemp;
 	
 	
-	@RequestMapping(method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.GET)
 	ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{
 		List<Book> collection = bookRepo.findAll();
 		if (!collection.isEmpty())
@@ -54,7 +54,7 @@ public class BookController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.GET, value = "/{bookId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.GET, value = "/{bookId}")
 	ResponseEntity<Book> getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
 		if (bookRepo.exists(bookId)) 
 			return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.OK);

@@ -29,7 +29,7 @@ import model.MyLink;
 import model.Person;;
 
 @RestController
-@RequestMapping("/persons")
+@RequestMapping(value="bookstore/persons", produces=MediaType.APPLICATION_JSON_VALUE)
 public class PersonController {
 	
 	@Autowired
@@ -39,7 +39,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.GET)
 	public ResponseEntity<List<Person>> getAllPersons() throws CollectionIsEmptyException{
 		List<Person> collection = personRepo.findAll();
 		if (!collection.isEmpty())
@@ -49,7 +49,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(value="/{personName}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value="/{personName}", method=RequestMethod.GET)
 	ResponseEntity<Person> getPerson(@PathVariable("personName") String name) throws PersonDoesNotExistsException{
 		if (personRepo.findByName(name)!=null) 
 			return new ResponseEntity<Person>(personRepo.findByName(name), HttpStatus.OK);
@@ -77,10 +77,18 @@ public class PersonController {
 	}
 	
 	
+	
 	private URI getUriForPersons(String personName) throws URISyntaxException{
 		/*
 		 * returns the URI for the 'Persons' collection if the parameter is empty, or the resource URI if a personName is specified
 		 */
 		return new URI((ControllerLinkBuilder.linkTo(PersonController.class)).toString()+personName);
+	}
+
+
+	
+	@RequestMapping(value="books")
+	BookController getBookController(){
+		return new BookController();
 	}
 }

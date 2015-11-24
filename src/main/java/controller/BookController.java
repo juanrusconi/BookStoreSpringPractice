@@ -7,17 +7,17 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 
+import org.springframework.data.mongodb.core.MongoTemplate;
 /* ---- Spring HATEOAS ---- */
 //import org.springframework.hateoas.Link;
-//import org.springframework.hateoas.mvc.ControllerLinkBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 /* ---- Spring HTTP ---- */
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 /* ---- Spring annotations ---- */
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,8 +39,7 @@ public class BookController {
 	
 	@Autowired
 	private BookRepository bookRepo;
-	
-	public static String books_uri = "http://localhost:8080/books/";
+
 	private final AtomicLong counter = new AtomicLong();
 	private MongoTemplate mongoTemp;
 	
@@ -74,19 +73,16 @@ public class BookController {
 			newId = counter.incrementAndGet();
 		}
 		Book newBook = new Book(newId.toString(), title, author, pub, new ArrayList<MyLink>());
-		
-//		newBook.addLink(new Link(ControllerLinkBuilder.linkTo(BookController.class).slash(newBook.getId()).toString(), Link.REL_SELF));
-//		newBook.addLink(new Link(ControllerLinkBuilder.linkTo(BookController.class).toString(), "coll"));
-		newBook.addLink(new MyLink("self", books_uri+newBook.getId()));
+		newBook.addLink(new MyLink("self", (ControllerLinkBuilder.linkTo(BookController.class)).toString()+newBook.getId()));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-//		headers.setLocation(ControllerLinkBuilder.linkTo(BookController.class).slash(newBook.getId()).toUri());
-		headers.setLocation(new URI(books_uri+newBook.getId()));
-		HttpStatus operationStatus = (bookRepo.save(newBook)!=null)? HttpStatus.OK:HttpStatus.BAD_REQUEST;
+		headers.setLocation(new URI((ControllerLinkBuilder.linkTo(BookController.class)).toString()+newBook.getId()));
 		
-		if (!bookRepo.exists(newBook.getId())) 
+		if (!bookRepo.exists(newBook.getId())){
+			HttpStatus operationStatus = (bookRepo.save(newBook)!=null)? HttpStatus.OK:HttpStatus.BAD_REQUEST;
 			return new ResponseEntity<Void>(headers, operationStatus);
+		}
 		throw new BookAlreadyExistsException(newBook.getId());
 	}
 	

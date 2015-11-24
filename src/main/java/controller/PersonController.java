@@ -7,6 +7,7 @@ import java.util.List;
 
 
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,13 +29,12 @@ import model.MyLink;
 import model.Person;;
 
 @RestController
-@RequestMapping("/person")
+@RequestMapping("/persons")
 public class PersonController {
 	
 	@Autowired
 	private PersonRepository personRepo;
 	
-	public static String person_uri = "http://localhost:8080/person/";
 	private MongoTemplate mongoTemp;
 	
 	
@@ -51,7 +51,7 @@ public class PersonController {
 	
 	@RequestMapping(value="/{personName}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<Person> getPerson(@PathVariable("personName") String name) throws PersonDoesNotExistsException{
-		if (personRepo.exists(name)) 
+		if (personRepo.findByName(name)!=null) 
 			return new ResponseEntity<Person>(personRepo.findByName(name), HttpStatus.OK);
 		throw new PersonDoesNotExistsException(name);
 	}
@@ -63,15 +63,16 @@ public class PersonController {
 												throws URISyntaxException, PersonAlreadyExistsException{
 		
 		Person newPerson = new Person(name, new ArrayList<Book>(), new ArrayList<MyLink>());
-		newPerson.addLink(new MyLink("self", person_uri+newPerson.getName()));
+		newPerson.addLink(new MyLink("self", (ControllerLinkBuilder.linkTo(PersonController.class)).toString()+newPerson.getName()));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.setLocation(new URI(person_uri+newPerson.getName()));
+		headers.setLocation(new URI((ControllerLinkBuilder.linkTo(PersonController.class)).toString()+newPerson.getName()));
 		
-		HttpStatus operationStatus = (personRepo.save(newPerson)!=null)? HttpStatus.OK:HttpStatus.BAD_REQUEST;
-		if (!personRepo.exists(newPerson.getName()))
+		if (personRepo.findByName(newPerson.getName())==null){
+			HttpStatus operationStatus = (personRepo.save(newPerson)!=null)? HttpStatus.OK:HttpStatus.BAD_REQUEST;
 			return new ResponseEntity<Void>(headers, operationStatus);
+		}
 		throw new PersonAlreadyExistsException(newPerson.getName());
 	}
 }

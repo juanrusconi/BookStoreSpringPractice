@@ -22,6 +22,7 @@ public class HomeController {
 	@RequestMapping(method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	ResponseEntity<ArrayList<Link>> getIndexes(){
 		List<Link> links = new ArrayList<Link>();
+		links.add(new Link(ControllerLinkBuilder.linkTo(HomeController.class).toString(), "home"));
 		links.add(new Link(ControllerLinkBuilder.linkTo(BookController.class).toString(), "books"));
 		links.add(new Link(ControllerLinkBuilder.linkTo(PersonController.class).toString(), "persons"));
 		

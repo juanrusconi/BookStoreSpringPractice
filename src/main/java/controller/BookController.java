@@ -73,11 +73,11 @@ public class BookController {
 			newId = counter.incrementAndGet();
 		}
 		Book newBook = new Book(newId.toString(), title, author, pub, new ArrayList<MyLink>());
-		newBook.addLink(new MyLink("self", (ControllerLinkBuilder.linkTo(BookController.class)).toString()+newBook.getId()));
+		newBook.addLink(new MyLink(MyLink.REL_SELF, getUriForBooks(newBook.getId()).toString()));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.setLocation(new URI((ControllerLinkBuilder.linkTo(BookController.class)).toString()+newBook.getId()));
+		headers.setLocation((getUriForBooks(newBook.getId())));
 		
 		if (!bookRepo.exists(newBook.getId())){
 			HttpStatus operationStatus = (bookRepo.save(newBook)!=null)? HttpStatus.OK:HttpStatus.BAD_REQUEST;
@@ -88,7 +88,12 @@ public class BookController {
 	
 	
 	
-	
+	private URI getUriForBooks(String bookId) throws URISyntaxException{
+		/*
+		 * returns the URI for the 'books' collection if the parameter is empty, or the resource URI if a bookId is specified
+		 */
+		return new URI((ControllerLinkBuilder.linkTo(BookController.class)).toString()+bookId);
+	}
 	
 	
 	

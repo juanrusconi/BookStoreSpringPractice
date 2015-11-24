@@ -63,7 +63,7 @@ public class PersonController {
 												throws URISyntaxException, PersonAlreadyExistsException{
 		
 		Person newPerson = new Person(name, new ArrayList<Book>(), new ArrayList<MyLink>());
-		newPerson.addLink(new MyLink("self", (ControllerLinkBuilder.linkTo(PersonController.class)).toString()+newPerson.getName()));
+		newPerson.addLink(new MyLink(MyLink.REL_SELF, getUriForPersons(newPerson.getName()).toString()));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
@@ -74,5 +74,13 @@ public class PersonController {
 			return new ResponseEntity<Void>(headers, operationStatus);
 		}
 		throw new PersonAlreadyExistsException(newPerson.getName());
+	}
+	
+	
+	private URI getUriForPersons(String personName) throws URISyntaxException{
+		/*
+		 * returns the URI for the 'Persons' collection if the parameter is empty, or the resource URI if a personName is specified
+		 */
+		return new URI((ControllerLinkBuilder.linkTo(PersonController.class)).toString()+personName);
 	}
 }

@@ -2,6 +2,9 @@ package model;
 
 public class MyLink {
 	
+	public static final String REL_SELF = "self";
+	public static final String REL_COLLECTION = "coll";
+	
 	private String rel;
 	private String href;
 	

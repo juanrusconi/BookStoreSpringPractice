@@ -38,11 +38,18 @@ import model.MyLink;
 public class BookController {
 	
 	@Autowired
-	private BookRepository bookRepo;
-
-	private final AtomicLong counter = new AtomicLong();
-	private MongoTemplate mongoTemp;
+	BookRepository bookRepo;
+	MongoTemplate mongoTemp;
+	final AtomicLong counter = new AtomicLong();
 	
+	
+	public BookController() {
+		
+	}
+	
+	public BookController(BookRepository bookRepo) {
+		this.bookRepo = bookRepo;
+	}
 	
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{

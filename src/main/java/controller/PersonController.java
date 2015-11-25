@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import exception.BookAlreadyExistsException;
 import exception.BookDoesNotExistException;
 /* --- Exception classes --- */
 import exception.CollectionIsEmptyException;
@@ -37,9 +38,11 @@ import model.Person;;
 public class PersonController {
 	
 	@Autowired
-	private PersonRepository personRepo;
+	PersonRepository personRepo;
+	BookRepository bookRepo;
+	MongoTemplate mongoTemp;
 	
-	private MongoTemplate mongoTemp;
+	private BookController bookCont = new BookController(bookRepo);
 	
 	
 	
@@ -99,25 +102,52 @@ public class PersonController {
 	// ------------------------------------- person's books (reservations) methods ------------------------------------------------
 	
 	
+	
 	@RequestMapping(method=RequestMethod.GET, value = "/{personName}/books", produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Book>> getAllPersonBooks(@PathVariable String personName) throws PersonDoesNotExistsException{
+		/*
+		 * returns the list of books from the given person
+		 */
 		return new ResponseEntity<List<Book>>(getPerson(personName).getBody().getBooks(), HttpStatus.OK);
 	}
+	
+	
 	
 	@RequestMapping(method=RequestMethod.GET, value = "/{personName}/books/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Book> getPersonBook(@PathVariable String personName, 
 												@PathVariable String bookId) throws PersonDoesNotExistsException, BookDoesNotExistException{
+		/*
+		 * returns an existing book from the given person
+		 */
+		Person person = getPerson(personName).getBody();
+		if (person == null) throw new PersonDoesNotExistsException(personName);
+		Book book = person.findBook(bookId);
+		if ( book == null) throw new BookDoesNotExistException(bookId);
 		
-		//TODO: search for the person first, or throw PersonDoesNotExistsException
-		
-		if (getPerson(personName).getBody().findBook(bookId) != null)
-			return new ResponseEntity<Book>(getPerson(personName).getBody().findBook(bookId), HttpStatus.OK);
-		throw new BookDoesNotExistException(bookId);
+		return new ResponseEntity<Book>(book, HttpStatus.OK);		
 	}
 	
 	
 	
-	
+	@RequestMapping(method=RequestMethod.POST, value = "/{personName}/books/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Void> addPersonsBook (@PathVariable String personName, @PathVariable String bookId)
+			throws PersonDoesNotExistsException, BookAlreadyExistsException, BookDoesNotExistException, URISyntaxException{
+		/*
+		 * adds the given book to the specified person's book list, previously checking that the book exists.
+		 * Returns the location of the newly created resource.
+		 */
+		Person person = getPerson(personName).getBody();
+		if (person == null) throw new PersonDoesNotExistsException(personName);
+		if (person.findBook(bookId) != null) throw new BookAlreadyExistsException(bookId);
+		Book newBorrowedBook = bookCont.getBook(bookId).getBody(); //it'll throw an exception if bookId doesn't exist in the Book Collection
+		person.addBook(newBorrowedBook);
+		personRepo.save(person);	//as it was previously checked that the person exists, it will update the existing document
+		
+		HttpHeaders header = new HttpHeaders();
+		header.setContentType(MediaType.APPLICATION_JSON);
+		header.setLocation(getUriForPersonBooks(personName, bookId));
+		return new ResponseEntity<Void>(header, HttpStatus.CREATED);
+	}
 	
 	
 	
@@ -129,7 +159,7 @@ public class PersonController {
 	
 	private URI getUriForPersons(String personName) throws URISyntaxException{
 		/*
-		 * returns the URI for the 'Persons' collection if the parameter is empty, or the resource URI if a personName is specified
+		 * returns the URI for the 'Persons' collection if the parameter is empty, or the resource URI if a personName is specified.
 		 */
 		return new URI((ControllerLinkBuilder.linkTo(PersonController.class)).toString()+personName);
 	}
@@ -139,7 +169,7 @@ public class PersonController {
 	private URI getUriForPersonBooks(String personName, String bookId) 
 							throws URISyntaxException, PersonDoesNotExistsException{
 		/*
-		 * returns the URI for the Person's collection of books or for a particular borrowed book if bookId is specified
+		 * returns the URI for the Person's collection of books, or for a particular book if bookId is specified.
 		 */
 		if (personName==null || personName.isEmpty()) throw new PersonDoesNotExistsException(personName);
 		return new URI(getUriForPersons(personName).toString().concat("/books/"+bookId));

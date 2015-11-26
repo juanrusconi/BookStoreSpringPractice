@@ -75,6 +75,10 @@ public class Person {
 		return null;
 	}
 	
+	public boolean deleteBook (Book bookToRemove){
+		return books.remove(bookToRemove);
+	}
+	
 	//TODO: methods for managing collection of borrowed books 
 	
 }

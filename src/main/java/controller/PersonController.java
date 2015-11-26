@@ -134,8 +134,8 @@ public class PersonController {
 		 * Returns the location of the newly created resource.
 		 */
 		Person person = getPerson(personName).getBody();
-		if (person == null) throw new PersonDoesNotExistsException(personName);
 		if (person.findBook(bookId) != null) throw new BookAlreadyExistsException(bookId);
+		
 		Book newBorrowedBook = bookCont.getBook(bookId).getBody(); //it'll throw an exception if bookId doesn't exist in the Book Collection
 		person.addBook(newBorrowedBook);
 		personRepo.save(person);	//as it was previously checked that the person exists, it will update the existing document
@@ -147,8 +147,27 @@ public class PersonController {
 	}
 	
 	
-	
-	
+	@RequestMapping(method=RequestMethod.DELETE, value = "/{personName}/books/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Void> deletePersonBook(@PathVariable String personName, @PathVariable String bookId) 
+					throws PersonDoesNotExistsException, BookAlreadyExistsException, BookDoesNotExistException, URISyntaxException{
+		/*
+		 * deletes the given book from the person's book list and saves the changes.
+		 */
+		Person person = getPerson(personName).getBody();
+		Book bookToRemove = person.findBook(bookId);
+		if (bookToRemove == null) throw new BookDoesNotExistException(bookId);
+		
+		HttpStatus operation_status;
+		HttpHeaders headers = new HttpHeaders();
+		if (person.deleteBook(bookToRemove)){
+			personRepo.save(person);
+			operation_status = HttpStatus.OK;
+			headers.setLocation((getUriForPersonBooks(personName, ""))); //returns the URI of the person's book list
+		}
+		else operation_status = HttpStatus.BAD_REQUEST;
+		
+		return new ResponseEntity<Void>(headers, operation_status);
+	}
 	
 	
 	// ------------------------------------- controller's private methods ------------------------------------------------
@@ -158,7 +177,7 @@ public class PersonController {
 		/*
 		 * returns the URI for the 'Persons' collection if the parameter is empty, or the resource URI if a personName is specified.
 		 */
-		return new URI((ControllerLinkBuilder.linkTo(PersonController.class)).toString()+personName);
+		return new URI((ControllerLinkBuilder.linkTo(PersonController.class)).toString()+"/"+personName);	//TODO: .slash(person)
 	}
 	
 	

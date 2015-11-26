@@ -32,7 +32,7 @@ import model.MyLink;
 import model.Person;;
 
 @RestController
-@RequestMapping("bookstore/persons")
+@RequestMapping("re/persons")
 public class PersonController {
 	
 	@Autowired
@@ -63,7 +63,7 @@ public class PersonController {
 	
 	
 	@RequestMapping(method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Void> createPerson (@RequestParam(value="name", defaultValue="no_name") String name) 
+	public ResponseEntity<Void> createPerson (@RequestParam(value="name", required=true) String name) 
 												throws URISyntaxException, PersonAlreadyExistsException{
 		
 		Person newPerson = new Person(name, new ArrayList<Book>(), new ArrayList<MyLink>());
@@ -96,9 +96,8 @@ public class PersonController {
 	}
 	
 	
-	// ------------------------------------- person's books (reservations) methods ------------------------------------------------
 	
-	
+	// ------------------------------------- person's books (reservations) methods ------------------------------------------------	
 	
 	@RequestMapping(method=RequestMethod.GET, value = "/{personName}/books", produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Book>> getAllPersonBooks(@PathVariable String personName) throws PersonDoesNotExistsException{
@@ -147,6 +146,7 @@ public class PersonController {
 	}
 	
 	
+	
 	@RequestMapping(method=RequestMethod.DELETE, value = "/{personName}/books/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deletePersonBook(@PathVariable String personName, @PathVariable String bookId) 
 					throws PersonDoesNotExistsException, BookAlreadyExistsException, BookDoesNotExistException, URISyntaxException{
@@ -191,7 +191,6 @@ public class PersonController {
 	
 	// ------------------------------------- controller's private methods ------------------------------------------------
 	
-	
 	private URI getUriForPersons(String personName) throws URISyntaxException{
 		/*
 		 * returns the URI for the 'Persons' collection if the parameter is empty, or the resource URI if a personName is specified.
@@ -222,6 +221,7 @@ public class PersonController {
 		 */
 		return e.getMessage();
 	}
+	
 	
 	
 	@ResponseStatus(HttpStatus.NOT_FOUND)

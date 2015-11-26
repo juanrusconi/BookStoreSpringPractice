@@ -34,7 +34,7 @@ import model.MyLink;
 
 
 @RestController
-@RequestMapping("/books")
+@RequestMapping("bookstore/books")
 public class BookController {
 	
 	@Autowired
@@ -47,10 +47,7 @@ public class BookController {
 		
 	}
 	
-	public BookController(BookRepository bookRepo) {
-		super();
-		this.bookRepo = bookRepo;
-	}
+	
 	
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{
@@ -110,6 +107,7 @@ public class BookController {
 	}
 	
 	
+	// ------------------------------------- controller's private methods ------------------------------------------------
 	
 	URI getUriForBooks(String bookId) throws URISyntaxException{
 		/*

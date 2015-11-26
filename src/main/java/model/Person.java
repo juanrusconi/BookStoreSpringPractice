@@ -68,6 +68,21 @@ public class Person {
 		books.add(newBook);
 	}
 	
+	public Book findBook (String bookId){
+		for (Book b:books){
+			if (b.getId() == bookId || b.getId().equals(bookId)) return b;
+		}	
+		return null;
+	}
+	
+	public boolean deleteBook (Book bookToRemove){
+		return books.remove(bookToRemove);
+	}
+	
+	public void deleteAllBooks (){
+		books.clear();
+	}
+	
 	//TODO: methods for managing collection of borrowed books 
 	
 }

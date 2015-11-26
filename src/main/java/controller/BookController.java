@@ -38,14 +38,19 @@ import model.MyLink;
 public class BookController {
 	
 	@Autowired
-	private BookRepository bookRepo;
-
-	private final AtomicLong counter = new AtomicLong();
-	private MongoTemplate mongoTemp;
+	public BookRepository bookRepo;
+	public MongoTemplate mongoTemp;
+	final AtomicLong counter = new AtomicLong();
+	
+	
+	public BookController(){
+		
+	}
+	
 	
 	
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{
+	public ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{
 		List<Book> collection = bookRepo.findAll();
 		if (!collection.isEmpty())
 			return new ResponseEntity<List<Book>>(collection, HttpStatus.OK);			
@@ -55,7 +60,7 @@ public class BookController {
 	
 	
 	@RequestMapping(method=RequestMethod.GET, value = "/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<Book> getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
+	public ResponseEntity<Book> getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
 		if (bookRepo.exists(bookId)) 
 			return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.OK);
 		throw new BookDoesNotExistException(bookId);
@@ -64,7 +69,7 @@ public class BookController {
 	
 
 	@RequestMapping(method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<Void> createBook(@RequestParam(value="title", defaultValue="no_title") String title, 
+	public ResponseEntity<Void> createBook(@RequestParam(value="title", defaultValue="no_title") String title, 
 									@RequestParam(value="author", defaultValue="no_author") String author, 
 									@RequestParam(value="pub", defaultValue="no_publisher") String pub) 
 														throws BookAlreadyExistsException, URISyntaxException{
@@ -80,7 +85,7 @@ public class BookController {
 		headers.setLocation((getUriForBooks(newBook.getId())));
 		
 		if (!bookRepo.exists(newBook.getId())){
-			HttpStatus operationStatus = (bookRepo.save(newBook)!=null)? HttpStatus.OK:HttpStatus.BAD_REQUEST;
+			HttpStatus operationStatus = (bookRepo.save(newBook)!=null)? HttpStatus.CREATED:HttpStatus.BAD_REQUEST;
 			return new ResponseEntity<Void>(headers, operationStatus);
 		}
 		throw new BookAlreadyExistsException(newBook.getId());
@@ -89,7 +94,7 @@ public class BookController {
 	
 	
 	@RequestMapping(method=RequestMethod.DELETE, value = "/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
-	ResponseEntity<Void> deleteBook(@PathVariable String bookId ) throws BookDoesNotExistException, URISyntaxException{
+	public ResponseEntity<Void> deleteBook(@PathVariable String bookId ) throws BookDoesNotExistException, URISyntaxException{
 		
 		if (bookRepo.exists(bookId)){
 			bookRepo.delete(bookId);			
@@ -102,8 +107,9 @@ public class BookController {
 	}
 	
 	
+	// ------------------------------------- controller's private methods ------------------------------------------------
 	
-	private URI getUriForBooks(String bookId) throws URISyntaxException{
+	URI getUriForBooks(String bookId) throws URISyntaxException{
 		/*
 		 * returns the URI for the 'books' collection if the parameter is empty, or the resource URI if a bookId is specified
 		 */
@@ -112,9 +118,23 @@ public class BookController {
 	
 	
 	
-	@ExceptionHandler({IllegalArgumentException.class, BookDoesNotExistException.class, BookAlreadyExistsException.class})
-	ResponseEntity<String> conflictHandler(Exception e){
+	@ExceptionHandler({IllegalArgumentException.class, 
+						BookAlreadyExistsException.class})
+	ResponseEntity<String> conflictHandler_existingItem(Exception e){
+		/*
+		 * this is a different way to handle exceptions for the controller. From: https://www.youtube.com/watch?v=oG2rotiGr90
+		 */
 		return new ResponseEntity<String>(e.getMessage(), HttpStatus.PRECONDITION_FAILED);
 	}
 	
+	
+	
+	@ExceptionHandler({BookDoesNotExistException.class,
+						CollectionIsEmptyException.class})
+	ResponseEntity<String> conflictHandler_missingItem(Exception e){
+		/*
+		* this is a different way to handle exceptions for the controller. From: https://www.youtube.com/watch?v=oG2rotiGr90
+		*/
+		return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+	}
 }

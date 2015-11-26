@@ -170,6 +170,25 @@ public class PersonController {
 	}
 	
 	
+	
+	@RequestMapping(method=RequestMethod.DELETE, value = "/{personName}/books/", produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Void> deleteAllPersonBook(@PathVariable String personName) 
+					throws PersonDoesNotExistsException, URISyntaxException{
+		/*
+		 * deletes the entire book list of the given person.
+		 */
+		Person person = getPerson(personName).getBody();
+		person.deleteAllBooks();
+		personRepo.save(person);
+		
+		HttpHeaders headers = new HttpHeaders();
+		headers.setLocation((getUriForPersons(personName))); //returns the URI of the person
+		
+		return new ResponseEntity<Void>(headers, HttpStatus.OK);
+	}
+	
+	
+	
 	// ------------------------------------- controller's private methods ------------------------------------------------
 	
 	

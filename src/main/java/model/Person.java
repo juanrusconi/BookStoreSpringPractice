@@ -79,6 +79,10 @@ public class Person {
 		return books.remove(bookToRemove);
 	}
 	
+	public void deleteAllBooks (){
+		books.clear();
+	}
+	
 	//TODO: methods for managing collection of borrowed books 
 	
 }

@@ -32,7 +32,7 @@ import model.MyLink;
 import model.Person;;
 
 @RestController
-@RequestMapping("re/persons")
+@RequestMapping("bookstore/persons")
 public class PersonController {
 	
 	@Autowired
@@ -97,9 +97,23 @@ public class PersonController {
 	
 	
 	
+	@RequestMapping(method=RequestMethod.DELETE, produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Void> deleteAllPerson() throws URISyntaxException{
+		/*
+		 * deletes all the documents in the persons collection		
+		 */
+		personRepo.deleteAll();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setLocation((getUriForPersons("")));
+		return new ResponseEntity<Void>(headers, HttpStatus.OK);
+	}
+	
+	
 	// ------------------------------------- person's books (reservations) methods ------------------------------------------------	
 	
-	@RequestMapping(method=RequestMethod.GET, value = "/{personName}/books", produces=MediaType.APPLICATION_JSON_VALUE)
+	static final String PERSONS_BOOKS_URI = "/{personName}/books";
+	
+	@RequestMapping(method=RequestMethod.GET, value = PERSONS_BOOKS_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Book>> getAllPersonBooks(@PathVariable String personName) throws PersonDoesNotExistsException{
 		/*
 		 * returns the list of books from the given person
@@ -109,7 +123,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.GET, value = "/{personName}/books/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.GET, value = PERSONS_BOOKS_URI+"/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Book> getPersonBook(@PathVariable String personName, 
 												@PathVariable String bookId) throws PersonDoesNotExistsException, BookDoesNotExistException{
 		/*
@@ -125,7 +139,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.POST, value = "/{personName}/books/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.POST, value = PERSONS_BOOKS_URI+"/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> addPersonsBook (@PathVariable String personName, @PathVariable String bookId)
 			throws PersonDoesNotExistsException, BookAlreadyExistsException, BookDoesNotExistException, URISyntaxException{
 		/*
@@ -147,7 +161,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.DELETE, value = "/{personName}/books/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.DELETE, value = PERSONS_BOOKS_URI+"/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deletePersonBook(@PathVariable String personName, @PathVariable String bookId) 
 					throws PersonDoesNotExistsException, BookAlreadyExistsException, BookDoesNotExistException, URISyntaxException{
 		/*
@@ -171,7 +185,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.DELETE, value = "/{personName}/books/", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.DELETE, value = PERSONS_BOOKS_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deleteAllPersonBook(@PathVariable String personName) 
 					throws PersonDoesNotExistsException, URISyntaxException{
 		/*

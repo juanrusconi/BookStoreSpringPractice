@@ -109,9 +109,9 @@ public class BookController {
 	
 	// ------------------------------------- controller's private methods ------------------------------------------------
 	
-	URI getUriForBooks(String bookId) throws URISyntaxException{
+	private URI getUriForBooks(String bookId) throws URISyntaxException{
 		/*
-		 * returns the URI for the 'books' collection if the parameter is empty, or the resource URI if a bookId is specified
+		 * returns the URI for the 'books' collection if the parameter is empty, or a particular resource's URI if a bookId is specified
 		 */
 		return new URI((ControllerLinkBuilder.linkTo(BookController.class)).toString()+bookId);
 	}
@@ -120,7 +120,7 @@ public class BookController {
 	
 	@ExceptionHandler({IllegalArgumentException.class, 
 						BookAlreadyExistsException.class})
-	ResponseEntity<String> conflictHandler_existingItem(Exception e){
+	private ResponseEntity<String> conflictHandler_existingItem(Exception e){
 		/*
 		 * this is a different way to handle exceptions for the controller. From: https://www.youtube.com/watch?v=oG2rotiGr90
 		 */
@@ -131,7 +131,7 @@ public class BookController {
 	
 	@ExceptionHandler({BookDoesNotExistException.class,
 						CollectionIsEmptyException.class})
-	ResponseEntity<String> conflictHandler_missingItem(Exception e){
+	private ResponseEntity<String> conflictHandler_missingItem(Exception e){
 		/*
 		* this is a different way to handle exceptions for the controller. From: https://www.youtube.com/watch?v=oG2rotiGr90
 		*/

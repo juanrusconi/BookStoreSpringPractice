@@ -38,16 +38,17 @@ import model.MyLink;
 public class BookController {
 	
 	@Autowired
-	BookRepository bookRepo;
-	MongoTemplate mongoTemp;
+	public BookRepository bookRepo;
+	public MongoTemplate mongoTemp;
 	final AtomicLong counter = new AtomicLong();
 	
 	
-	public BookController() {
+	public BookController(){
 		
 	}
 	
 	public BookController(BookRepository bookRepo) {
+		super();
 		this.bookRepo = bookRepo;
 	}
 	

@@ -5,15 +5,14 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/* ---- Spring annotations ---- */
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-/* ---- Spring annotations ---- */
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +27,6 @@ import exception.BookDoesNotExistException;
 import exception.CollectionIsEmptyException;
 import exception.PersonAlreadyExistsException;
 import exception.PersonDoesNotExistsException;
-
 import model.Book;
 import model.MyLink;
 import model.Person;;
@@ -39,10 +37,9 @@ public class PersonController {
 	
 	@Autowired
 	PersonRepository personRepo;
-	BookRepository bookRepo;
+	@Autowired
+	BookController bookCont = new BookController();		
 	MongoTemplate mongoTemp;
-	
-	private BookController bookCont = new BookController(bookRepo);
 	
 	
 	

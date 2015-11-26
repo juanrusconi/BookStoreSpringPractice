@@ -107,6 +107,18 @@ public class BookController {
 	}
 	
 	
+	
+	@RequestMapping(method=RequestMethod.DELETE, produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Void> deleteAllBooks() throws URISyntaxException{
+		/*
+		 * deletes all the documents in the book collection		
+		 */
+		bookRepo.deleteAll();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setLocation((getUriForBooks("")));
+		return new ResponseEntity<Void>(headers, HttpStatus.OK);
+	}
+	
 	// ------------------------------------- controller's private methods ------------------------------------------------
 	
 	private URI getUriForBooks(String bookId) throws URISyntaxException{

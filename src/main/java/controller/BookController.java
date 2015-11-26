@@ -120,11 +120,23 @@ public class BookController {
 	
 	
 	
-	@ExceptionHandler({IllegalArgumentException.class, BookDoesNotExistException.class, BookAlreadyExistsException.class})
-	ResponseEntity<String> conflictHandler(Exception e){
+	@ExceptionHandler({IllegalArgumentException.class, 
+						BookAlreadyExistsException.class})
+	ResponseEntity<String> conflictHandler_existingItem(Exception e){
 		/*
 		 * this is a different way to handle exceptions for the controller. From: https://www.youtube.com/watch?v=oG2rotiGr90
 		 */
 		return new ResponseEntity<String>(e.getMessage(), HttpStatus.PRECONDITION_FAILED);
+	}
+	
+	
+	
+	@ExceptionHandler({BookDoesNotExistException.class,
+						CollectionIsEmptyException.class})
+	ResponseEntity<String> conflictHandler_missingItem(Exception e){
+		/*
+		* this is a different way to handle exceptions for the controller. From: https://www.youtube.com/watch?v=oG2rotiGr90
+		*/
+		return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 	}
 }

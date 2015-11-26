@@ -175,8 +175,22 @@ public class PersonController {
 	
 	
 	@ResponseStatus(HttpStatus.PRECONDITION_FAILED)
-	@ExceptionHandler({PersonDoesNotExistsException.class, PersonAlreadyExistsException.class})
-	private String conflictHandler(Exception e){
+	@ExceptionHandler({IllegalArgumentException.class, 
+						PersonAlreadyExistsException.class,
+						BookAlreadyExistsException.class})
+	private String conflictHandler_existingItem(Exception e){
+		/*
+		 * this is a different way to handle exceptions for the controller. From: http://www.infoq.com/articles/springmvc_jsx-rs
+		 */
+		return e.getMessage();
+	}
+	
+	
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	@ExceptionHandler({PersonDoesNotExistsException.class,
+						BookDoesNotExistException.class,
+						CollectionIsEmptyException.class})
+	private String conflictHandler_missingItem(Exception e){
 		/*
 		 * this is a different way to handle exceptions for the controller. From: http://www.infoq.com/articles/springmvc_jsx-rs
 		 */

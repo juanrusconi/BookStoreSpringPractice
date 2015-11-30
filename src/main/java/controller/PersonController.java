@@ -48,19 +48,8 @@ public class PersonController {
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Person>> getAllPersons() throws CollectionIsEmptyException{
 		List<Person> collection = personRepo.findAll();
-		if (!collection.isEmpty())
-			return new ResponseEntity<List<Person>>(collection, HttpStatus.OK);			
-		throw new CollectionIsEmptyException(mongoTemp.getCollectionName(Person.class));
-		
-		//TODO: when CollectionIsEmptyException is called:
-//		{
-//			  "timestamp": 1448902776119,
-//			  "status": 500,
-//			  "error": "Internal Server Error",
-//			  "exception": "java.lang.NullPointerException",
-//			  "message": "No message available",
-//			  "path": "/bookstore/persons/"
-//			}
+		if (collection.isEmpty() || collection == null) throw new CollectionIsEmptyException("person");
+		return new ResponseEntity<List<Person>>(collection, HttpStatus.OK);
 	}
 	
 	
@@ -189,6 +178,10 @@ public class PersonController {
 		Person person = getPerson(personName).getBody();
 		Book bookToRemove = person.findBook(bookId);
 		if (bookToRemove == null) throw new BookDoesNotExistException(bookId);
+		
+		
+		//TODO: set HasCopiesLent to false if no person has this book (call new method?)
+		
 		
 		HttpStatus operation_status;
 		HttpHeaders headers = new HttpHeaders();

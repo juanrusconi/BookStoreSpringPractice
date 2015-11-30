@@ -57,18 +57,8 @@ public class BookController {
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{
 		List<Book> collection = bookRepo.findAll();
-		if (collection.isEmpty()) throw new CollectionIsEmptyException("book");
-		return new ResponseEntity<List<Book>>(collection, HttpStatus.OK);			
-				
-		//TODO: when CollectionIsEmptyException is called:
-//		{
-//			  "timestamp": 1448893963092,
-//			  "status": 500,
-//			  "error": "Internal Server Error",
-//			  "exception": "java.lang.NullPointerException",
-//			  "message": "No message available",
-//			  "path": "/bookstore/books/"
-//			}
+		if (collection.isEmpty() || collection == null) throw new CollectionIsEmptyException("book");
+		return new ResponseEntity<List<Book>>(collection, HttpStatus.OK);
 	}
 	
 	

@@ -119,6 +119,32 @@ public class BookController {
 		return new ResponseEntity<Void>(headers, HttpStatus.OK);
 	}
 	
+	
+	@RequestMapping(method=RequestMethod.PUT, value = "/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Void> updateBook(	@PathVariable String bookId,
+											@RequestParam(value="author") String author, 
+											@RequestParam(value="pub") String pub)
+											throws BookDoesNotExistException, URISyntaxException {
+		/*
+		 * modifies the 'author' and/or 'publisher' fields of the given book, and returns the URI of the updated document.
+		 */
+		
+		//TODO: first it should check if the book is 'in use'
+		
+		if (!bookRepo.exists(bookId)) throw new BookDoesNotExistException(bookId);
+		Book modifiedBook = bookRepo.findOne(bookId);
+		
+		if (!(author.equals("") && author.equals(null))) modifiedBook.setAuthor(author);
+		if (!(pub.equals("") && pub.equals(null))) modifiedBook.setPublisher(pub);
+		bookRepo.save(modifiedBook);
+		
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setLocation((getUriForBooks(modifiedBook.getId())));
+		
+		return new ResponseEntity<Void>(headers, HttpStatus.OK);		
+	}
+	
 	// ------------------------------------- controller's private methods ------------------------------------------------
 	
 	private URI getUriForBooks(String bookId) throws URISyntaxException{

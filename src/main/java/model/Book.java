@@ -12,6 +12,7 @@ public class Book {
 	private String title;
 	private String author;
 	private String publisher;
+//	private boolean hasCopiesLended;
 	private List<MyLink> links = new ArrayList<MyLink>();;
 
 	public Book(){		

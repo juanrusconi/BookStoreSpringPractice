@@ -5,11 +5,10 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 
-
-import org.springframework.data.mongodb.core.MongoTemplate;
+/* ---- Spring annotations ---- */
+import org.springframework.beans.factory.annotation.Autowired;
 /* ---- Spring HATEOAS ---- */
 //import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
@@ -18,20 +17,18 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-/* ---- Spring annotations ---- */
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 /* --- Exception classes --- */
 import exception.BookAlreadyExistsException;
 import exception.BookDoesNotExistException;
 import exception.BookHasCopiesLendedException;
 import exception.CollectionIsEmptyException;
-
 import model.Book;
 import model.MyLink;
 
@@ -41,10 +38,9 @@ import model.MyLink;
 public class BookController {
 	
 	@Autowired
-	public BookRepository bookRepo;							//TODO: set to private
-	public MongoTemplate mongoTemp;
-	private final AtomicLong counter = new AtomicLong();
-	private Calendar calendar = Calendar.getInstance();
+	BookRepository bookRepo;
+	Calendar calendar = Calendar.getInstance();
+	final AtomicLong counter = new AtomicLong();
 	public static final String BOOK_ID_URI = "/{bookId}";
 	
 	
@@ -80,7 +76,6 @@ public class BookController {
 		/**
 		 * creates a new document in the books collection with the given parameters as fields
 		 */
-		calendar.setTimeZone(TimeZone.getTimeZone("GMT-3"));	//TODO: working?
 		Long newId = counter.incrementAndGet();
 		while (bookRepo.exists(newId.toString())){
 			newId = counter.incrementAndGet();
@@ -126,7 +121,7 @@ public class BookController {
 	@RequestMapping(method=RequestMethod.DELETE, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deleteAllBooks() throws URISyntaxException{
 		/*
-		 * deletes all the documents in the book collection, without checking if they have copies lent
+		 * deletes all the documents in the book collection, WITHOUT checking if they have copies lent
 		 */
 		bookRepo.deleteAll();
 		HttpHeaders headers = new HttpHeaders();
@@ -160,6 +155,7 @@ public class BookController {
 		
 		return new ResponseEntity<Void>(headers, HttpStatus.OK);		
 	}
+	
 	
 	// ------------------------------------- controller's private methods ------------------------------------------------
 	

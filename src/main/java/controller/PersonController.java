@@ -5,10 +5,10 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import static java.util.stream.Collectors.toList;
 
 /* ---- Spring annotations ---- */
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -37,11 +37,10 @@ import model.Person;;
 public class PersonController {
 	
 	@Autowired
-	PersonRepository personRepo;						//TODO: set to private
+	PersonRepository personRepo;
 	@Autowired
-	BookController bookCont = new BookController();		
-	MongoTemplate mongoTemp;
-	private Calendar calendar = Calendar.getInstance();
+	BookController bookCont = new BookController();
+	Calendar calendar = Calendar.getInstance();
 	static final String PERSON_ID_URI = "/{personName}";
 	
 	
@@ -171,24 +170,25 @@ public class PersonController {
 	
 	@RequestMapping(method=RequestMethod.DELETE, value = PERSONS_BOOKS_URI + BOOK_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deletePersonBook(@PathVariable String personName, @PathVariable String bookId) 
-					throws PersonDoesNotExistsException, BookAlreadyExistsException, BookDoesNotExistException, URISyntaxException{
+					throws PersonDoesNotExistsException, BookAlreadyExistsException, BookDoesNotExistException, 
+							URISyntaxException, CollectionIsEmptyException{
 		/*
 		 * deletes the given book from the person's book list and saves the changes.
 		 */
 		Person person = getPerson(personName).getBody();
 		Book bookToRemove = person.findBook(bookId);
 		if (bookToRemove == null) throw new BookDoesNotExistException(bookId);
-		
-		
-		//TODO: set HasCopiesLent to false if no person has this book (call new method?)
-		
-		
 		HttpStatus operation_status;
 		HttpHeaders headers = new HttpHeaders();
 		if (person.deleteBook(bookToRemove)){
 			personRepo.save(person);
 			operation_status = HttpStatus.OK;
 			headers.setLocation((getUriForPersonBooks(personName, ""))); //returns the URI of the person's book list
+			
+			//In the 'book' collection, set field HasCopiesLent to false if no person has the specified book
+			if (getAllPersonsWithBook(bookId) == null){
+				bookCont.updateBook(bookId, "", "", false);		//TODO: test
+			}
 		}
 		else operation_status = HttpStatus.BAD_REQUEST;
 		
@@ -213,8 +213,7 @@ public class PersonController {
 		return new ResponseEntity<Void>(headers, HttpStatus.OK);
 	}
 	
-	
-	
+		
 	// ------------------------------------- controller's private methods ------------------------------------------------
 	
 	private URI getUriForPersons(String personName) throws URISyntaxException{
@@ -235,6 +234,20 @@ public class PersonController {
 		return new URI(getUriForPersons(personName).toString().concat("/books/"+bookId));
 	}
 	
+	
+	private List<Person> getAllPersonsWithBook (String bookId) 
+			throws BookDoesNotExistException, CollectionIsEmptyException{
+		/*
+		 * given a book Id it'll return a list of persons who borrowed this book
+		 */
+		if (bookCont.getBook(bookId)!= null){
+			return getAllPersons().getBody()
+									.stream()
+									.filter(p -> p.hasBook(bookId))	// filtering: see "Java 8 in action" from page 119
+									.collect(toList());
+		}
+		throw new BookDoesNotExistException(bookId);
+	}
 	
 	
 	@ResponseStatus(HttpStatus.PRECONDITION_FAILED)

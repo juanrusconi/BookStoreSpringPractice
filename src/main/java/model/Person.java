@@ -75,6 +75,13 @@ public class Person {
 		return null;
 	}
 	
+	public boolean hasBook (String bookId){
+		for (Book b:books){
+			if (b.getId() == bookId || b.getId().equals(bookId)) return true;
+		}	
+		return false;
+	}
+	
 	public boolean deleteBook (Book bookToRemove){
 		return books.remove(bookToRemove);
 	}

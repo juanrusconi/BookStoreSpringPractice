@@ -1,6 +1,7 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.springframework.data.annotation.Id;
 
@@ -12,19 +13,49 @@ public class Book {
 	private String title;
 	private String author;
 	private String publisher;
-//	private boolean hasCopiesLended;
+	private boolean hasCopiesLended;
+	private Date addedOnDate;
+	private Date lastModifiedOnDate;
 	private List<MyLink> links = new ArrayList<MyLink>();;
 
 	public Book(){		
 	}
-	
-	public Book(String id, String title, String author, String publisher, ArrayList<MyLink> links) {
+
+	public Book(String id, String title, String author, String publisher, boolean hasCopiesLended, Date addedOnDate,
+			Date lastModifiedOnDate, List<MyLink> links) {
 		super();
 		this.id = id;
 		this.title = title;
 		this.author = author;
 		this.publisher = publisher;
+		this.hasCopiesLended = hasCopiesLended;
+		this.addedOnDate = addedOnDate;
+		this.lastModifiedOnDate = lastModifiedOnDate;
 		this.links = links;
+	}
+
+	public Date getLastModifiedOnDate() {
+		return lastModifiedOnDate;
+	}
+
+	public void setLastModifiedOnDate(Date lastModifiedOnDate) {
+		this.lastModifiedOnDate = lastModifiedOnDate;
+	}
+
+	public boolean hasCopiesLended() {
+		return hasCopiesLended;
+	}
+
+	public void setHasCopiesLended(boolean hasCopiesLended) {
+		this.hasCopiesLended = hasCopiesLended;
+	}
+
+	public Date getAddedOnDate() {
+		return addedOnDate;
+	}
+
+	public void setAddedOnDate(Date addedOnDate) {
+		this.addedOnDate = addedOnDate;
 	}
 
 	public String getId() {
@@ -73,9 +104,13 @@ public class Book {
 
 	@Override
 	public String toString() {
-		return "Book [id=" + id + ", title=" + title + ", author=" + author + ", publisher=" + publisher + "]";
-	}
-	
-	
-	
+		return "Book [id=" + id + 
+				", title=" + title + 
+				", author=" + author + 
+				", publisher=" + publisher	+
+				", hasCopiesLended=" + hasCopiesLended + 
+				", addedOnDate=" + addedOnDate + 
+				", lastModifiedOnDate="	+ lastModifiedOnDate + 
+				", links=" + links + "]";
+	}	
 }

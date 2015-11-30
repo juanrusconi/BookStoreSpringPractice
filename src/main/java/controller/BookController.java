@@ -3,7 +3,9 @@ package controller;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 /* --- Exception classes --- */
 import exception.BookAlreadyExistsException;
 import exception.BookDoesNotExistException;
+import exception.BookHasCopiesLendedException;
 import exception.CollectionIsEmptyException;
 
 import model.Book;
@@ -40,8 +43,8 @@ public class BookController {
 	@Autowired
 	public BookRepository bookRepo;
 	public MongoTemplate mongoTemp;
-	final AtomicLong counter = new AtomicLong();
-	
+	private final AtomicLong counter = new AtomicLong();
+	private Calendar calendar = Calendar.getInstance();
 	
 	public BookController(){
 		
@@ -55,6 +58,16 @@ public class BookController {
 		if (!collection.isEmpty())
 			return new ResponseEntity<List<Book>>(collection, HttpStatus.OK);			
 		throw new CollectionIsEmptyException(mongoTemp.getCollectionName(Book.class));
+		
+		//TODO: when CollectionIsEmptyException is called:
+//		{
+//			  "timestamp": 1448893963092,
+//			  "status": 500,
+//			  "error": "Internal Server Error",
+//			  "exception": "java.lang.NullPointerException",
+//			  "message": "No message available",
+//			  "path": "/bookstore/books/"
+//			}
 	}
 	
 	
@@ -69,15 +82,19 @@ public class BookController {
 	
 
 	@RequestMapping(method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Void> createBook(@RequestParam(value="title", defaultValue="no_title") String title, 
-									@RequestParam(value="author", defaultValue="no_author") String author, 
-									@RequestParam(value="pub", defaultValue="no_publisher") String pub) 
+	public ResponseEntity<Void> createBook(	@RequestParam(value="title", defaultValue="no_title") String title, 
+											@RequestParam(value="author", defaultValue="no_author") String author, 
+											@RequestParam(value="pub", defaultValue="no_publisher") String pub) 
 														throws BookAlreadyExistsException, URISyntaxException{
+		/**
+		 * creates a new document in the books collection with the given parameters as fields
+		 */
+		calendar.setTimeZone(TimeZone.getTimeZone("GMT-3"));	//TODO: working?
 		Long newId = counter.incrementAndGet();
 		while (bookRepo.exists(newId.toString())){
 			newId = counter.incrementAndGet();
 		}
-		Book newBook = new Book(newId.toString(), title, author, pub, new ArrayList<MyLink>());
+		Book newBook = new Book(newId.toString(), title, author, pub, false, calendar.getTime(), calendar.getTime(), new ArrayList<MyLink>());
 		newBook.addLink(new MyLink(MyLink.REL_SELF, getUriForBooks(newBook.getId()).toString()));
 
 		HttpHeaders headers = new HttpHeaders();
@@ -94,14 +111,21 @@ public class BookController {
 	
 	
 	@RequestMapping(method=RequestMethod.DELETE, value = "/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Void> deleteBook(@PathVariable String bookId ) throws BookDoesNotExistException, URISyntaxException{
-		
+	public ResponseEntity<Void> deleteBook(@PathVariable String bookId ) 
+			throws BookDoesNotExistException, BookHasCopiesLendedException, URISyntaxException{
+		/*
+		 * deletes a book, previously checking if it has copies that have been borrowed by persons. If it does, 
+		 * the method will throw an exception and the book wont be deleted. 
+		 */
 		if (bookRepo.exists(bookId)){
-			bookRepo.delete(bookId);			
-			HttpHeaders headers = new HttpHeaders();
-			headers.setLocation((getUriForBooks(""))); //returns the URI of the collection it was in
-			
-			return new ResponseEntity<Void>(headers, HttpStatus.OK);
+			if (!bookRepo.findOne(bookId).hasCopiesLended()){
+				bookRepo.delete(bookId);			
+				HttpHeaders headers = new HttpHeaders();
+				headers.setLocation((getUriForBooks(""))); //returns the URI of the collection it was in
+				
+				return new ResponseEntity<Void>(headers, HttpStatus.OK);
+			}
+			throw new BookHasCopiesLendedException(bookId);
 		}
 		throw new BookDoesNotExistException(bookId);
 	}
@@ -111,7 +135,7 @@ public class BookController {
 	@RequestMapping(method=RequestMethod.DELETE, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deleteAllBooks() throws URISyntaxException{
 		/*
-		 * deletes all the documents in the book collection		
+		 * deletes all the documents in the book collection, without checking if they have copies lended
 		 */
 		bookRepo.deleteAll();
 		HttpHeaders headers = new HttpHeaders();
@@ -136,6 +160,7 @@ public class BookController {
 		
 		if (!(author.equals("") && author.equals(null))) modifiedBook.setAuthor(author);
 		if (!(pub.equals("") && pub.equals(null))) modifiedBook.setPublisher(pub);
+		modifiedBook.setLastModifiedOnDate(calendar.getTime());
 		bookRepo.save(modifiedBook);
 		
 		HttpHeaders headers = new HttpHeaders();
@@ -151,7 +176,7 @@ public class BookController {
 		/*
 		 * returns the URI for the 'books' collection if the parameter is empty, or a particular resource's URI if a bookId is specified
 		 */
-		return new URI((ControllerLinkBuilder.linkTo(BookController.class)).toString()+bookId);
+		return new URI((ControllerLinkBuilder.linkTo(BookController.class)).toString()+"/"+bookId);
 	}
 	
 	

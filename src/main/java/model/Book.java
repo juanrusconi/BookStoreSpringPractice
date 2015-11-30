@@ -13,7 +13,7 @@ public class Book {
 	private String title;
 	private String author;
 	private String publisher;
-	private boolean hasCopiesLended;
+	private boolean hasCopiesLent;
 	private Date addedOnDate;
 	private Date lastModifiedOnDate;
 	private List<MyLink> links = new ArrayList<MyLink>();;
@@ -21,14 +21,14 @@ public class Book {
 	public Book(){		
 	}
 
-	public Book(String id, String title, String author, String publisher, boolean hasCopiesLended, Date addedOnDate,
+	public Book(String id, String title, String author, String publisher, boolean hasCopiesLent, Date addedOnDate,
 			Date lastModifiedOnDate, List<MyLink> links) {
 		super();
 		this.id = id;
 		this.title = title;
 		this.author = author;
 		this.publisher = publisher;
-		this.hasCopiesLended = hasCopiesLended;
+		this.hasCopiesLent = hasCopiesLent;
 		this.addedOnDate = addedOnDate;
 		this.lastModifiedOnDate = lastModifiedOnDate;
 		this.links = links;
@@ -42,12 +42,12 @@ public class Book {
 		this.lastModifiedOnDate = lastModifiedOnDate;
 	}
 
-	public boolean hasCopiesLended() {
-		return hasCopiesLended;
+	public boolean getHasCopiesLent() {
+		return hasCopiesLent;
 	}
 
-	public void setHasCopiesLended(boolean hasCopiesLended) {
-		this.hasCopiesLended = hasCopiesLended;
+	public void setHasCopiesLent(boolean hasCopiesLended) {
+		this.hasCopiesLent = hasCopiesLended;
 	}
 
 	public Date getAddedOnDate() {
@@ -108,7 +108,7 @@ public class Book {
 				", title=" + title + 
 				", author=" + author + 
 				", publisher=" + publisher	+
-				", hasCopiesLended=" + hasCopiesLended + 
+				", hasCopiesLent=" + hasCopiesLent + 
 				", addedOnDate=" + addedOnDate + 
 				", lastModifiedOnDate="	+ lastModifiedOnDate + 
 				", links=" + links + "]";

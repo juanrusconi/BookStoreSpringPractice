@@ -41,10 +41,12 @@ import model.MyLink;
 public class BookController {
 	
 	@Autowired
-	public BookRepository bookRepo;
+	public BookRepository bookRepo;							//TODO: set to private
 	public MongoTemplate mongoTemp;
 	private final AtomicLong counter = new AtomicLong();
 	private Calendar calendar = Calendar.getInstance();
+	public static final String BOOK_ID_URI = "/{bookId}";
+	
 	
 	public BookController(){
 		
@@ -55,10 +57,9 @@ public class BookController {
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{
 		List<Book> collection = bookRepo.findAll();
-		if (!collection.isEmpty())
-			return new ResponseEntity<List<Book>>(collection, HttpStatus.OK);			
-		throw new CollectionIsEmptyException(mongoTemp.getCollectionName(Book.class));
-		
+		if (collection.isEmpty()) throw new CollectionIsEmptyException("book");
+		return new ResponseEntity<List<Book>>(collection, HttpStatus.OK);			
+				
 		//TODO: when CollectionIsEmptyException is called:
 //		{
 //			  "timestamp": 1448893963092,
@@ -72,7 +73,7 @@ public class BookController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.GET, value = "/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.GET, value = BOOK_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Book> getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
 		if (bookRepo.exists(bookId)) 
 			return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.OK);
@@ -110,7 +111,7 @@ public class BookController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.DELETE, value = "/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.DELETE, value = BOOK_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deleteBook(@PathVariable String bookId ) 
 			throws BookDoesNotExistException, BookHasCopiesLendedException, URISyntaxException{
 		/*
@@ -118,7 +119,7 @@ public class BookController {
 		 * the method will throw an exception and the book wont be deleted. 
 		 */
 		if (bookRepo.exists(bookId)){
-			if (!bookRepo.findOne(bookId).hasCopiesLended()){
+			if (!bookRepo.findOne(bookId).getHasCopiesLent()){
 				bookRepo.delete(bookId);			
 				HttpHeaders headers = new HttpHeaders();
 				headers.setLocation((getUriForBooks(""))); //returns the URI of the collection it was in
@@ -135,7 +136,7 @@ public class BookController {
 	@RequestMapping(method=RequestMethod.DELETE, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deleteAllBooks() throws URISyntaxException{
 		/*
-		 * deletes all the documents in the book collection, without checking if they have copies lended
+		 * deletes all the documents in the book collection, without checking if they have copies lent
 		 */
 		bookRepo.deleteAll();
 		HttpHeaders headers = new HttpHeaders();
@@ -144,22 +145,22 @@ public class BookController {
 	}
 	
 	
-	@RequestMapping(method=RequestMethod.PUT, value = "/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	
+	@RequestMapping(method=RequestMethod.PUT, value = BOOK_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> updateBook(	@PathVariable String bookId,
 											@RequestParam(value="author") String author, 
-											@RequestParam(value="pub") String pub)
+											@RequestParam(value="pub") String pub,
+											@RequestParam(value="lended", defaultValue="false") boolean lended)
 											throws BookDoesNotExistException, URISyntaxException {
 		/*
 		 * modifies the 'author' and/or 'publisher' fields of the given book, and returns the URI of the updated document.
-		 */
-		
-		//TODO: first it should check if the book is 'in use'
-		
+		 */		
 		if (!bookRepo.exists(bookId)) throw new BookDoesNotExistException(bookId);
 		Book modifiedBook = bookRepo.findOne(bookId);
 		
-		if (!(author.equals("") && author.equals(null))) modifiedBook.setAuthor(author);
-		if (!(pub.equals("") && pub.equals(null))) modifiedBook.setPublisher(pub);
+		if (!author.isEmpty()) modifiedBook.setAuthor(author);
+		if (!pub.isEmpty()) modifiedBook.setPublisher(pub);
+		modifiedBook.setHasCopiesLent(lended);
 		modifiedBook.setLastModifiedOnDate(calendar.getTime());
 		bookRepo.save(modifiedBook);
 		
@@ -182,7 +183,8 @@ public class BookController {
 	
 	
 	@ExceptionHandler({IllegalArgumentException.class, 
-						BookAlreadyExistsException.class})
+						BookAlreadyExistsException.class,
+						BookHasCopiesLendedException.class})
 	private ResponseEntity<String> conflictHandler_existingItem(Exception e){
 		/*
 		 * this is a different way to handle exceptions for the controller. From: https://www.youtube.com/watch?v=oG2rotiGr90

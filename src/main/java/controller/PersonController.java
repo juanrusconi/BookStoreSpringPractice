@@ -3,6 +3,7 @@ package controller;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 /* ---- Spring annotations ---- */
@@ -36,11 +37,12 @@ import model.Person;;
 public class PersonController {
 	
 	@Autowired
-	PersonRepository personRepo;
+	PersonRepository personRepo;						//TODO: set to private
 	@Autowired
 	BookController bookCont = new BookController();		
 	MongoTemplate mongoTemp;
-	
+	private Calendar calendar = Calendar.getInstance();
+	static final String PERSON_ID_URI = "/{personName}";
 	
 	
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
@@ -49,11 +51,21 @@ public class PersonController {
 		if (!collection.isEmpty())
 			return new ResponseEntity<List<Person>>(collection, HttpStatus.OK);			
 		throw new CollectionIsEmptyException(mongoTemp.getCollectionName(Person.class));
+		
+		//TODO: when CollectionIsEmptyException is called:
+//		{
+//			  "timestamp": 1448902776119,
+//			  "status": 500,
+//			  "error": "Internal Server Error",
+//			  "exception": "java.lang.NullPointerException",
+//			  "message": "No message available",
+//			  "path": "/bookstore/persons/"
+//			}
 	}
 	
 	
 	
-	@RequestMapping(value="/{personName}", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value=PERSON_ID_URI, method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Person> getPerson(@PathVariable("personName") String name) throws PersonDoesNotExistsException{
 		if (personRepo.findByName(name)!=null) 
 			return new ResponseEntity<Person>(personRepo.findByName(name), HttpStatus.OK);
@@ -82,7 +94,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.DELETE, value = "/{personName}", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.DELETE, value = PERSON_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deletePerson(@PathVariable String personName ) throws PersonDoesNotExistsException, URISyntaxException{
 		
 		if (personRepo.findByName(personName)!=null){
@@ -111,7 +123,8 @@ public class PersonController {
 	
 	// ------------------------------------- person's books (reservations) methods ------------------------------------------------	
 	
-	static final String PERSONS_BOOKS_URI = "/{personName}/books";
+	static final String PERSONS_BOOKS_URI = PERSON_ID_URI + "/books";
+	static final String BOOK_ID_URI = "/{bookId}";
 	
 	@RequestMapping(method=RequestMethod.GET, value = PERSONS_BOOKS_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Book>> getAllPersonBooks(@PathVariable String personName) throws PersonDoesNotExistsException{
@@ -123,7 +136,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.GET, value = PERSONS_BOOKS_URI+"/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.GET, value = PERSONS_BOOKS_URI + BOOK_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Book> getPersonBook(@PathVariable String personName, 
 												@PathVariable String bookId) throws PersonDoesNotExistsException, BookDoesNotExistException{
 		/*
@@ -139,7 +152,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.POST, value = PERSONS_BOOKS_URI+"/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.POST, value = PERSONS_BOOKS_URI + BOOK_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> addPersonsBook (@PathVariable String personName, @PathVariable String bookId)
 			throws PersonDoesNotExistsException, BookAlreadyExistsException, BookDoesNotExistException, URISyntaxException{
 		/*
@@ -148,8 +161,14 @@ public class PersonController {
 		 */
 		Person person = getPerson(personName).getBody();
 		if (person.findBook(bookId) != null) throw new BookAlreadyExistsException(bookId);
-		
 		Book newBorrowedBook = bookCont.getBook(bookId).getBody(); //it'll throw an exception if bookId doesn't exist in the Book Collection
+		
+		if (!newBorrowedBook.getHasCopiesLent()){	//the book is updated to indicate that people possess copies of it
+			newBorrowedBook.setHasCopiesLent(true);
+			newBorrowedBook.setLastModifiedOnDate(calendar.getTime());
+			bookCont.updateBook(bookId, "", "", true);
+		}
+		
 		person.addBook(newBorrowedBook);
 		personRepo.save(person);	//as it was previously checked that the person exists, it will update the existing document
 		
@@ -161,7 +180,7 @@ public class PersonController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.DELETE, value = PERSONS_BOOKS_URI+"/{bookId}", produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.DELETE, value = PERSONS_BOOKS_URI + BOOK_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deletePersonBook(@PathVariable String personName, @PathVariable String bookId) 
 					throws PersonDoesNotExistsException, BookAlreadyExistsException, BookDoesNotExistException, URISyntaxException{
 		/*

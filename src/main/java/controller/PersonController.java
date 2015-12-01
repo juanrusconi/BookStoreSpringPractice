@@ -149,7 +149,7 @@ public class PersonController {
 		 */
 		Person person = getPerson(personName).getBody();
 		if (person.findBook(bookId) != null) throw new BookAlreadyExistsException(bookId);
-		Book newBorrowedBook = bookCont.getBook(bookId).getBody(); //it'll throw an exception if bookId doesn't exist in the Book Collection
+		Book newBorrowedBook = bookCont.getBook(bookId); //it'll throw an exception if bookId doesn't exist in the Book Collection
 		
 		if (!newBorrowedBook.getHasCopiesLent()){	//the book is updated to indicate that people possess copies of it
 			newBorrowedBook.setHasCopiesLent(true);

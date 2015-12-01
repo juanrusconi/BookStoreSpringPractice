@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.springframework.data.annotation.Id;
+/* ---- Spring HATEOAS ---- */
+import org.springframework.hateoas.Link;
 
 public class Book {
 	
@@ -16,13 +18,13 @@ public class Book {
 	private boolean hasCopiesLent;
 	private Date addedOnDate;
 	private Date lastModifiedOnDate;
-	private List<MyLink> links = new ArrayList<MyLink>();;
+	private List<Link> links = new ArrayList<Link>();;
 
 	public Book(){		
 	}
 
 	public Book(String id, String title, String author, String publisher, boolean hasCopiesLent, Date addedOnDate,
-			Date lastModifiedOnDate, List<MyLink> links) {
+			Date lastModifiedOnDate, List<Link> links) {
 		super();
 		this.id = id;
 		this.title = title;
@@ -90,15 +92,15 @@ public class Book {
 		this.publisher = publisher;
 	}
 
-	public List<MyLink> getLinks() {
+	public List<Link> getLinks() {
 		return links;
 	}
 
-	public void setLinks(List<MyLink> links) {
+	public void setLinks(List<Link> links) {
 		this.links = links;
 	}
 	
-	public void addLink(MyLink newLink){
+	public void addLink(Link newLink){
 		links.add(newLink);
 	}
 

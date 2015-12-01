@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /* ---- Spring annotations ---- */
 import org.springframework.beans.factory.annotation.Autowired;
 /* ---- Spring HATEOAS ---- */
-//import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 /* ---- Spring HTTP ---- */
 import org.springframework.http.HttpHeaders;
@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /* --- Exception classes --- */
@@ -30,7 +31,7 @@ import exception.BookDoesNotExistException;
 import exception.BookHasCopiesLendedException;
 import exception.CollectionIsEmptyException;
 import model.Book;
-import model.MyLink;
+//import model.MyLink;
 
 
 @RestController
@@ -60,9 +61,9 @@ public class BookController {
 	
 	
 	@RequestMapping(method=RequestMethod.GET, value = BOOK_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Book> getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
+	@ResponseBody public Book getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
 		if (bookRepo.exists(bookId)) 
-			return new ResponseEntity<Book>(bookRepo.findOne(bookId), HttpStatus.OK);
+			return bookRepo.findOne(bookId);
 		throw new BookDoesNotExistException(bookId);
 	}
 	
@@ -80,12 +81,12 @@ public class BookController {
 		while (bookRepo.exists(newId.toString())){
 			newId = counter.incrementAndGet();
 		}
-		Book newBook = new Book(newId.toString(), title, author, pub, false, calendar.getTime(), calendar.getTime(), new ArrayList<MyLink>());
-		newBook.addLink(new MyLink(MyLink.REL_SELF, getUriForBooks(newBook.getId()).toString()));
+		Book newBook = new Book(newId.toString(), title, author, pub, false, calendar.getTime(), calendar.getTime(), new ArrayList<Link>());
+		newBook.addLink(new Link(getUriForBooks(newBook).toString(),Link.REL_SELF));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.setLocation((getUriForBooks(newBook.getId())));
+		headers.setLocation((getUriForBooks(newBook)));
 		
 		if (!bookRepo.exists(newBook.getId())){
 			HttpStatus operationStatus = (bookRepo.save(newBook)!=null)? HttpStatus.CREATED:HttpStatus.BAD_REQUEST;
@@ -107,7 +108,7 @@ public class BookController {
 			if (!bookRepo.findOne(bookId).getHasCopiesLent()){
 				bookRepo.delete(bookId);			
 				HttpHeaders headers = new HttpHeaders();
-				headers.setLocation((getUriForBooks(""))); //returns the URI of the collection it was in
+				headers.setLocation((getUriForBooks(null))); //returns the URI of the collection it was in
 				
 				return new ResponseEntity<Void>(headers, HttpStatus.OK);
 			}
@@ -125,7 +126,7 @@ public class BookController {
 		 */
 		bookRepo.deleteAll();
 		HttpHeaders headers = new HttpHeaders();
-		headers.setLocation((getUriForBooks("")));
+		headers.setLocation((getUriForBooks(null)));
 		return new ResponseEntity<Void>(headers, HttpStatus.OK);
 	}
 	
@@ -151,7 +152,7 @@ public class BookController {
 		
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.setLocation((getUriForBooks(modifiedBook.getId())));
+		headers.setLocation((getUriForBooks(modifiedBook)));
 		
 		return new ResponseEntity<Void>(headers, HttpStatus.OK);		
 	}
@@ -159,11 +160,17 @@ public class BookController {
 	
 	// ------------------------------------- controller's private methods ------------------------------------------------
 	
-	private URI getUriForBooks(String bookId) throws URISyntaxException{
+	private URI getUriForBooks(Book book) throws URISyntaxException{
 		/*
 		 * returns the URI for the 'books' collection if the parameter is empty, or a particular resource's URI if a bookId is specified
 		 */
-		return new URI((ControllerLinkBuilder.linkTo(BookController.class)).toString()+"/"+bookId);
+		
+		//TODO: {bookId} is not being set at the end of the returned URI
+		
+		//TODO: not required fields are being added automatically for each link object
+		
+		URI newUri = new URI(ControllerLinkBuilder.linkTo(BookController.class).slash(book).toString());
+		return newUri;
 	}
 	
 	

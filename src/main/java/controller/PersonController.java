@@ -186,8 +186,8 @@ public class PersonController {
 			headers.setLocation((getUriForPersonBooks(personName, ""))); //returns the URI of the person's book list
 			
 			//In the 'book' collection, set field HasCopiesLent to false if no person has the specified book
-			if (getAllPersonsWithBook(bookId) == null){
-				bookCont.updateBook(bookId, "", "", false);		//TODO: test
+			if (getAllPersonsWithBook(bookId).isEmpty()){
+				bookCont.updateBook(bookId, "", "", false);
 			}
 		}
 		else operation_status = HttpStatus.BAD_REQUEST;
@@ -238,7 +238,7 @@ public class PersonController {
 	private List<Person> getAllPersonsWithBook (String bookId) 
 			throws BookDoesNotExistException, CollectionIsEmptyException{
 		/*
-		 * given a book Id it'll return a list of persons who borrowed this book
+		 * given a book Id it'll return a list of persons who currently have this book
 		 */
 		if (bookCont.getBook(bookId)!= null){
 			return getAllPersons().getBody()

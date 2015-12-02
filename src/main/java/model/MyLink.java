@@ -1,5 +1,7 @@
 package model;
 
+import java.net.URI;
+
 public class MyLink {
 	
 	public static final String REL_SELF = "self";
@@ -11,10 +13,16 @@ public class MyLink {
 	public MyLink(){
 	}
 	
-	public MyLink(String rel, String href) {
+	public MyLink(String href, String rel) {
 		super();
 		this.rel = rel;
 		this.href = href;
+	}
+	
+	public MyLink(URI href, String rel) {
+		super();
+		this.rel = rel;
+		this.href = href.toString();
 	}
 
 	public String getRel() {

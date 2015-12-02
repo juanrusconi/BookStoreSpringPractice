@@ -5,9 +5,13 @@ import java.util.Date;
 import java.util.List;
 import org.springframework.data.annotation.Id;
 /* ---- Spring HATEOAS ---- */
-import org.springframework.hateoas.Link;
+//import org.springframework.hateoas.Link;
+//import org.springframework.hateoas.ResourceSupport;
+/* ---- jackson ---- */
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Book {
+public class Book{
 	
 	@Id
 	private String id;
@@ -18,13 +22,21 @@ public class Book {
 	private boolean hasCopiesLent;
 	private Date addedOnDate;
 	private Date lastModifiedOnDate;
-	private List<Link> links = new ArrayList<Link>();;
+	private List<MyLink> myLinks = new ArrayList<MyLink>();;
 
+	@JsonCreator
 	public Book(){		
 	}
 
-	public Book(String id, String title, String author, String publisher, boolean hasCopiesLent, Date addedOnDate,
-			Date lastModifiedOnDate, List<Link> links) {
+	@JsonCreator
+	public Book(@JsonProperty("id") String id, 
+				@JsonProperty("title") String title, 
+				@JsonProperty("author") String author, 
+				@JsonProperty("publisher") String publisher, 
+				@JsonProperty("hasCopiesLent") boolean hasCopiesLent, 
+				@JsonProperty("addedOnDate") Date addedOnDate,
+				@JsonProperty("lastModifiedOnDate") Date lastModifiedOnDate, 
+				@JsonProperty("links") List<MyLink> links) {
 		super();
 		this.id = id;
 		this.title = title;
@@ -33,7 +45,7 @@ public class Book {
 		this.hasCopiesLent = hasCopiesLent;
 		this.addedOnDate = addedOnDate;
 		this.lastModifiedOnDate = lastModifiedOnDate;
-		this.links = links;
+		this.myLinks = links;
 	}
 
 	public Date getLastModifiedOnDate() {
@@ -64,6 +76,10 @@ public class Book {
 		return id;
 	}
 
+//	public String getBookId() {
+//		return id;
+//	}
+	
 	public void setId(String id) {
 		this.id = id;
 	}
@@ -92,16 +108,16 @@ public class Book {
 		this.publisher = publisher;
 	}
 
-	public List<Link> getLinks() {
-		return links;
+	public List<MyLink> getLinks() {
+		return myLinks;
 	}
 
-	public void setLinks(List<Link> links) {
-		this.links = links;
+	public void setLinks(List<MyLink> links) {
+		this.myLinks = links;
 	}
 	
-	public void addLink(Link newLink){
-		links.add(newLink);
+	public void addLink(MyLink newLink){
+		myLinks.add(newLink);
 	}
 
 	@Override
@@ -113,6 +129,6 @@ public class Book {
 				", hasCopiesLent=" + hasCopiesLent + 
 				", addedOnDate=" + addedOnDate + 
 				", lastModifiedOnDate="	+ lastModifiedOnDate + 
-				", links=" + links + "]";
+				", links=" + myLinks + "]";
 	}	
 }

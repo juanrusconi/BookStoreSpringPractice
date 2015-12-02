@@ -130,9 +130,7 @@ public class PersonController {
 		/*
 		 * returns an existing book from the given person
 		 */
-		Person person = getPerson(personName).getBody();
-		if (person == null) throw new PersonDoesNotExistsException(personName);
-		Book book = person.findBook(bookId);
+		Book book = getPerson(personName).getBody().findBook(bookId);
 		if ( book == null) throw new BookDoesNotExistException(bookId);
 		
 		return new ResponseEntity<Book>(book, HttpStatus.OK);		

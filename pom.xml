@@ -22,6 +22,12 @@
 		      <version>3.8.1</version>
 		      <scope>test</scope>
 	    </dependency>
+	    <!-- Json Path -->
+	    <dependency>
+			<groupId>com.jayway.jsonpath</groupId>
+			<artifactId>json-path</artifactId>
+			<version>2.1.0</version>
+		</dependency>
     	<!-- Spring framework -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -58,4 +64,20 @@
             <version>1.8.1.RELEASE</version>
         </dependency>     
   </dependencies>
+  
+  <build>
+    <finalName>BookStoreSpringPractice</finalName>
+    <plugins>
+    	<plugin>
+    		<groupId>org.apache.maven.plugins</groupId>
+    		<artifactId>maven-compiler-plugin</artifactId>
+    		<version>3.3</version>
+    		<inherited>true</inherited>
+    		<configuration>
+    			<source>1.8</source>
+    			<target>1.8</target>
+    		</configuration>
+    	</plugin>
+    </plugins>
+  </build>
 </project>

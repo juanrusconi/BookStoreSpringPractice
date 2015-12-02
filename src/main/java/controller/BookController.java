@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /* ---- Spring annotations ---- */
 import org.springframework.beans.factory.annotation.Autowired;
 /* ---- Spring HATEOAS ---- */
-import org.springframework.hateoas.Link;
+//import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 /* ---- Spring HTTP ---- */
 import org.springframework.http.HttpHeaders;
@@ -31,7 +31,7 @@ import exception.BookDoesNotExistException;
 import exception.BookHasCopiesLendedException;
 import exception.CollectionIsEmptyException;
 import model.Book;
-//import model.MyLink;
+import model.MyLink;
 
 
 @RestController
@@ -52,16 +52,26 @@ public class BookController {
 	
 	
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<Book>> getAllBooks() throws CollectionIsEmptyException{
+	@ResponseBody 
+	public List<Book> getAllBooks() throws CollectionIsEmptyException{
+		/*
+		 * Returns a List containing all the books stored in the database.
+		 * Throws an exception if the database collection is empty.
+		 */
 		List<Book> collection = bookRepo.findAll();
 		if (collection.isEmpty() || collection == null) throw new CollectionIsEmptyException("book");
-		return new ResponseEntity<List<Book>>(collection, HttpStatus.OK);
+		return collection;
 	}
 	
 	
 	
 	@RequestMapping(method=RequestMethod.GET, value = BOOK_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
-	@ResponseBody public Book getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
+	@ResponseBody 
+	public Book getBook(@PathVariable String bookId ) throws BookDoesNotExistException{
+		/*
+		 * Returns the object of type Book with the given Id from the database.
+		 * An exception is thrown if no book can be found.
+		 */
 		if (bookRepo.exists(bookId)) 
 			return bookRepo.findOne(bookId);
 		throw new BookDoesNotExistException(bookId);
@@ -74,21 +84,28 @@ public class BookController {
 											@RequestParam(value="author", defaultValue="no_author") String author, 
 											@RequestParam(value="pub", defaultValue="no_publisher") String pub) 
 														throws BookAlreadyExistsException, URISyntaxException{
-		/**
-		 * creates a new document in the books collection with the given parameters as fields
+		/*
+		 * Creates a new document in the books collection with the given parameters as fields.
+		 * The Id of the new object is auto-generated.
+		 * Returns an empty response in which header is contained the location (URI) of the newly created resource.
+		 * An exception is thrown if there is an existing book with the same title.
 		 */
 		Long newId = counter.incrementAndGet();
 		while (bookRepo.exists(newId.toString())){
 			newId = counter.incrementAndGet();
 		}
-		Book newBook = new Book(newId.toString(), title, author, pub, false, calendar.getTime(), calendar.getTime(), new ArrayList<Link>());
-		newBook.addLink(new Link(getUriForBooks(newBook).toString(),Link.REL_SELF));
-
+		Book newBook = new Book(newId.toString(), 
+								title, author, pub, 
+								false, 										//has copies lent? -> false by default
+								calendar.getTime(), calendar.getTime(), 	//date of creation and date of last modification
+								new ArrayList<MyLink>());
+		newBook.addLink(new MyLink(getUriForBooks(newBook.getId()),MyLink.REL_SELF));
+		
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.setLocation((getUriForBooks(newBook)));
+		headers.setLocation(getUriForBooks(newBook.getId()));
 		
-		if (!bookRepo.exists(newBook.getId())){
+		if (bookRepo.findByTitle(newBook.getTitle()) == null){
 			HttpStatus operationStatus = (bookRepo.save(newBook)!=null)? HttpStatus.CREATED:HttpStatus.BAD_REQUEST;
 			return new ResponseEntity<Void>(headers, operationStatus);
 		}
@@ -101,14 +118,15 @@ public class BookController {
 	public ResponseEntity<Void> deleteBook(@PathVariable String bookId ) 
 			throws BookDoesNotExistException, BookHasCopiesLendedException, URISyntaxException{
 		/*
-		 * deletes a book, previously checking if it has copies that have been borrowed by persons. If it does, 
+		 * Deletes a book, previously checking if it has copies that have been borrowed by persons. If it does, 
 		 * the method will throw an exception and the book wont be deleted. 
+		 * Returns an empty response in which header is contained the location (URI) of the collection the resource was in.
 		 */
 		if (bookRepo.exists(bookId)){
 			if (!bookRepo.findOne(bookId).getHasCopiesLent()){
 				bookRepo.delete(bookId);			
 				HttpHeaders headers = new HttpHeaders();
-				headers.setLocation((getUriForBooks(null))); //returns the URI of the collection it was in
+				headers.setLocation((getUriForBooks(null))); 
 				
 				return new ResponseEntity<Void>(headers, HttpStatus.OK);
 			}
@@ -119,7 +137,7 @@ public class BookController {
 	
 	
 	
-	@RequestMapping(method=RequestMethod.DELETE, produces=MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(method=RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> deleteAllBooks() throws URISyntaxException{
 		/*
 		 * deletes all the documents in the book collection, WITHOUT checking if they have copies lent
@@ -136,10 +154,13 @@ public class BookController {
 	public ResponseEntity<Void> updateBook(	@PathVariable String bookId,
 											@RequestParam(value="author") String author, 
 											@RequestParam(value="pub") String pub,
-											@RequestParam(value="lended", defaultValue="false") boolean lended)
+											@RequestParam(value="lended", defaultValue="true") boolean lended)
 											throws BookDoesNotExistException, URISyntaxException {
 		/*
-		 * modifies the 'author' and/or 'publisher' fields of the given book, and returns the URI of the updated document.
+		 * This method allows to update the fields 'author', 'publisher' and/or 'hasCopiesLended' of the book matching Id field.
+		 * Automatically will update the 'lastModifiedOnDate' field with the current date time value.
+		 * Returns an empty response in which header is contained the location (URI) of the updated resource.
+		 * Will throw an exception if there isn't an existing book with the given Id.
 		 */		
 		if (!bookRepo.exists(bookId)) throw new BookDoesNotExistException(bookId);
 		Book modifiedBook = bookRepo.findOne(bookId);
@@ -152,7 +173,7 @@ public class BookController {
 		
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.setLocation((getUriForBooks(modifiedBook)));
+		headers.setLocation((getUriForBooks(modifiedBook.getId())));
 		
 		return new ResponseEntity<Void>(headers, HttpStatus.OK);		
 	}
@@ -160,17 +181,12 @@ public class BookController {
 	
 	// ------------------------------------- controller's private methods ------------------------------------------------
 	
-	private URI getUriForBooks(Book book) throws URISyntaxException{
+	private URI getUriForBooks(String bookId) throws URISyntaxException{
 		/*
-		 * returns the URI for the 'books' collection if the parameter is empty, or a particular resource's URI if a bookId is specified
+		 * Returns the URI for the 'books' collection if the parameter is empty, 
+		 * or a particular resource's URI if bookId is specified
 		 */
-		
-		//TODO: {bookId} is not being set at the end of the returned URI
-		
-		//TODO: not required fields are being added automatically for each link object
-		
-		URI newUri = new URI(ControllerLinkBuilder.linkTo(BookController.class).slash(book).toString());
-		return newUri;
+		return new URI(ControllerLinkBuilder.linkTo(BookController.class) +  (bookId.isEmpty()? "" : "/"+bookId));
 	}
 	
 	
@@ -180,8 +196,9 @@ public class BookController {
 						BookHasCopiesLendedException.class})
 	private ResponseEntity<String> conflictHandler_existingItem(Exception e){
 		/*
-		 * this is a different way to handle exceptions for the controller. From: https://www.youtube.com/watch?v=oG2rotiGr90
-		 */
+		* This is a different way to handle exceptions for the controller. 
+		* From: RESTFul API Design (SpringDeveloper) - https://www.youtube.com/watch?v=oG2rotiGr90
+		*/
 		return new ResponseEntity<String>(e.getMessage(), HttpStatus.PRECONDITION_FAILED);
 	}
 	
@@ -191,7 +208,8 @@ public class BookController {
 						CollectionIsEmptyException.class})
 	private ResponseEntity<String> conflictHandler_missingItem(Exception e){
 		/*
-		* this is a different way to handle exceptions for the controller. From: https://www.youtube.com/watch?v=oG2rotiGr90
+		* This is a different way to handle exceptions for the controller. 
+		* From: RESTFul API Design (SpringDeveloper) - https://www.youtube.com/watch?v=oG2rotiGr90
 		*/
 		return new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
 	}

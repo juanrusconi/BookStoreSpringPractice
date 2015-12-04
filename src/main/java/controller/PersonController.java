@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -45,19 +46,28 @@ public class PersonController {
 	
 	
 	@RequestMapping(method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<Person>> getAllPersons() throws CollectionIsEmptyException{
+	@ResponseBody
+	public List<Person> getAllPersons() throws CollectionIsEmptyException{
+		/*
+		 * Returns a List containing all the persons stored in the database.
+		 * Throws an exception if the database collection is empty.
+		 */
 		List<Person> collection = personRepo.findAll();
 		if (collection.isEmpty() || collection == null) throw new CollectionIsEmptyException("person");
-		return new ResponseEntity<List<Person>>(collection, HttpStatus.OK);
+		return collection;
 	}
 	
 	
 	
 	@RequestMapping(value=PERSON_ID_URI, method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Person> getPerson(@PathVariable("personName") String name) throws PersonDoesNotExistsException{
-		if (personRepo.findByName(name)!=null) 
-			return new ResponseEntity<Person>(personRepo.findByName(name), HttpStatus.OK);
-		throw new PersonDoesNotExistsException(name);
+	@ResponseBody
+	public Person getPerson(@PathVariable("personName") String name) throws PersonDoesNotExistsException{
+		/*
+		 * Returns the object of type Person with the given 'name' from the database.
+		 * An exception is thrown if no person can be found.
+		 */
+		if (personRepo.findByName(name)== null) throw new PersonDoesNotExistsException(name);
+		return personRepo.findByName(name);		
 	}
 	
 	
@@ -65,8 +75,17 @@ public class PersonController {
 	@RequestMapping(method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> createPerson (@RequestParam(value="name", required=true) String name) 
 												throws URISyntaxException, PersonAlreadyExistsException{
-		
-		Person newPerson = new Person(name, new ArrayList<Book>(), new ArrayList<MyLink>());
+		/*
+		 * Creates a new document in the 'person' collection with the given name
+		 * The Id of the new object is auto-generated when stored in the database.
+		 * Returns an empty response in which header is contained the location (URI) of the newly created resource.
+		 * An exception is thrown if there is an existing person with the same name.
+		 */
+		Person newPerson = new Person(name, 
+									  new ArrayList<Book>(), 
+									  new ArrayList<MyLink>(),
+									  "password",						//user pass (value by default)
+									  name);							//user id (by default the same as name)
 		newPerson.addLink(new MyLink(MyLink.REL_SELF, getUriForPersons(newPerson.getName()).toString()));
 
 		HttpHeaders headers = new HttpHeaders();
@@ -83,16 +102,18 @@ public class PersonController {
 	
 	
 	@RequestMapping(method=RequestMethod.DELETE, value = PERSON_ID_URI, produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Void> deletePerson(@PathVariable String personName ) throws PersonDoesNotExistsException, URISyntaxException{
-		
-		if (personRepo.findByName(personName)!=null){
-			personRepo.deleteByName(personName);			
-			HttpHeaders headers = new HttpHeaders();
-			headers.setLocation((getUriForPersons(""))); //returns the URI of the collection it was in
-			
-			return new ResponseEntity<Void>(headers, HttpStatus.OK);
-		}
-		throw new PersonDoesNotExistsException(personName);
+	public ResponseEntity<Void> deletePerson(@PathVariable String personName ) 
+									throws PersonDoesNotExistsException, URISyntaxException{
+		/*
+		 * Deletes the person document with the matching name.
+		 * Returns an empty response in which header is contained the location (URI) of the collection the resource was in.
+		 * Throws exception if no person with the given name could be found
+		 */		
+		if (personRepo.findByName(personName) == null) throw new PersonDoesNotExistsException(personName);
+		personRepo.deleteByName(personName);			
+		HttpHeaders headers = new HttpHeaders();
+		headers.setLocation((getUriForPersons("")));
+		return new ResponseEntity<Void>(headers, HttpStatus.OK);		
 	}
 	
 	
@@ -114,12 +135,14 @@ public class PersonController {
 	static final String PERSONS_BOOKS_URI = PERSON_ID_URI + "/books";
 	static final String BOOK_ID_URI = "/{bookId}";
 	
+	
+	
 	@RequestMapping(method=RequestMethod.GET, value = PERSONS_BOOKS_URI, produces=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<Book>> getAllPersonBooks(@PathVariable String personName) throws PersonDoesNotExistsException{
 		/*
 		 * returns the list of books from the given person
 		 */
-		return new ResponseEntity<List<Book>>(getPerson(personName).getBody().getBooks(), HttpStatus.OK);
+		return new ResponseEntity<List<Book>>(getPerson(personName).getBooks(), HttpStatus.OK);
 	}
 	
 	
@@ -130,7 +153,7 @@ public class PersonController {
 		/*
 		 * returns an existing book from the given person
 		 */
-		Book book = getPerson(personName).getBody().findBook(bookId);
+		Book book = getPerson(personName).findBook(bookId);
 		if ( book == null) throw new BookDoesNotExistException(bookId);
 		
 		return new ResponseEntity<Book>(book, HttpStatus.OK);		
@@ -145,7 +168,7 @@ public class PersonController {
 		 * adds the given book to the specified person's book list, previously checking that the book exists.
 		 * Returns the location of the newly created resource.
 		 */
-		Person person = getPerson(personName).getBody();
+		Person person = getPerson(personName);
 		if (person.findBook(bookId) != null) throw new BookAlreadyExistsException(bookId);
 		Book newBorrowedBook = bookCont.getBook(bookId); //it'll throw an exception if bookId doesn't exist in the Book Collection
 		
@@ -173,7 +196,7 @@ public class PersonController {
 		/*
 		 * deletes the given book from the person's book list and saves the changes.
 		 */
-		Person person = getPerson(personName).getBody();
+		Person person = getPerson(personName);
 		Book bookToRemove = person.findBook(bookId);
 		if (bookToRemove == null) throw new BookDoesNotExistException(bookId);
 		HttpStatus operation_status;
@@ -201,7 +224,7 @@ public class PersonController {
 		/*
 		 * deletes the entire book list of the given person.
 		 */
-		Person person = getPerson(personName).getBody();
+		Person person = getPerson(personName);
 		person.deleteAllBooks();
 		personRepo.save(person);
 		
@@ -239,8 +262,7 @@ public class PersonController {
 		 * given a book Id it'll return a list of persons who currently have this book
 		 */
 		if (bookCont.getBook(bookId)!= null){
-			return getAllPersons().getBody()
-									.stream()
+			return getAllPersons().stream()
 									.filter(p -> p.hasBook(bookId))	// filtering: see "Java 8 in action" from page 119
 									.collect(toList());
 		}

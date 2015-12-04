@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.annotation.Id;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+//@Document
 public class Person {
 
 	@Id
@@ -13,19 +16,50 @@ public class Person {
 	List<Book> books = new ArrayList<Book>();	/* list of books borrowed by this person */
 	List<MyLink> links = new ArrayList<MyLink>();
 	
+	@JsonIgnore
+	String userpass;
+    String userid;
+	
 	protected Person(){	
 	}
 
-	public Person(String name, ArrayList<Book> books, ArrayList<MyLink> links) {
+	public Person(String name, 
+				  List<Book> books, 
+				  List<MyLink> links, 
+				  String user_pass, 
+				  String user_id) {
 		super();
 		this.name = name;
 		this.books = books;
 		this.links = links;
+		this.userpass = user_pass;
+		this.userid = user_id;
 	}
 
 	@Override
 	public String toString() {
-		return "Person [id=" + id + ", name=" + name + ", books=" + books + ", links=" + links + "]";
+		return "Person [id=" + id + 
+				", name=" + name + 
+				", books=" + books + 
+				", links=" + links + 
+				", userpass=" + userpass + 
+				", userid=" + userid + "]";
+	}
+
+	public String getUserpass() {
+		return userpass;
+	}
+
+	public void setUserpass(String user_pass) {
+		this.userpass = user_pass;
+	}
+
+	public String getUserid() {
+		return userid;
+	}
+
+	public void setUserid(String user_id) {
+		this.userid = user_id;
 	}
 
 	public String getId() {

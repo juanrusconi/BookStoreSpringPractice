@@ -11,6 +11,7 @@ import org.springframework.data.annotation.Id;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+//@Document
 public class Book{
 	
 	@Id
